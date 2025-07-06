@@ -9,7 +9,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 exports.getProfile = async (req, res) => {
   try {
     const { data: user, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', req.user.id)
       .single();
@@ -52,7 +52,7 @@ exports.updateProfile = async (req, res) => {
     updateFields.updated_at = new Date().toISOString();
 
     const { data: user, error } = await supabase
-      .from('users')
+      .from('profiles')
       .update(updateFields)
       .eq('id', req.user.id)
       .single();

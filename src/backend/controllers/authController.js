@@ -18,7 +18,7 @@ exports.register = async (req, res) => {
 
     // Check if user already exists
     const { data: existingUser, error: existingUserError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('email', email)
       .single();
