@@ -1,10 +1,16 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
-// Initialize Supabase client
-// In a real app, these would be environment variables
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
+
+// Initialize Supabase client using environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables VITE_SUPABASE_URL or VITE_SUPABASE_KEY');
+}
+
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
 // Quiz related functions
 export const getQuizzes = async () => {
   const {
@@ -14,6 +20,7 @@ export const getQuizzes = async () => {
   if (error) throw error;
   return data;
 };
+
 export const getQuizById = async (id: string) => {
   const {
     data,
@@ -22,6 +29,7 @@ export const getQuizById = async (id: string) => {
   if (error) throw error;
   return data;
 };
+
 export const saveQuizResult = async (userId: string, quizId: string, score: number) => {
   const {
     error
@@ -33,6 +41,7 @@ export const saveQuizResult = async (userId: string, quizId: string, score: numb
   });
   if (error) throw error;
 };
+
 // Animal information functions
 export const getAnimals = async () => {
   const {
@@ -42,6 +51,7 @@ export const getAnimals = async () => {
   if (error) throw error;
   return data;
 };
+
 export const getAnimalById = async (id: string) => {
   const {
     data,
@@ -50,6 +60,7 @@ export const getAnimalById = async (id: string) => {
   if (error) throw error;
   return data;
 };
+
 // Badge functions
 export const getUserBadges = async (userId: string) => {
   const {
@@ -59,6 +70,7 @@ export const getUserBadges = async (userId: string) => {
   if (error) throw error;
   return data;
 };
+
 export const awardBadge = async (userId: string, type: string) => {
   // Check if user already has this badge
   const {
@@ -74,6 +86,7 @@ export const awardBadge = async (userId: string, type: string) => {
   });
   if (error) throw error;
 };
+
 // Leaderboard function
 export const getLeaderboard = async () => {
   const {
