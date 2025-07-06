@@ -15,6 +15,7 @@ interface AuthContextType {
     name?: string;
     avatar_url?: string;
   }) => Promise<void>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{
@@ -26,9 +27,14 @@ export const AuthProvider: React.FC<{
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     // Check active sessions and set the user
-    const session = supabase.auth.getSession();
-    setUser(session ? (session as any).user : null);
-    setLoading(false);
+    const getSession = async () => {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+    getSession();
     // Listen for auth changes
     const {
       data: authListener
@@ -103,7 +109,8 @@ export const AuthProvider: React.FC<{
     signIn,
     signUp,
     signOut,
-    updateProfile
+    updateProfile,
+    setUser
   }}>
       {children}
     </AuthContext.Provider>;

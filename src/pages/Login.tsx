@@ -9,7 +9,8 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const {
-    signIn
+    signIn,
+    setUser
   } = useAuth();
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,10 +19,23 @@ const Login: React.FC = () => {
     setError(null);
     // Check if test credentials are being used
     if (email === 'test@wildlife.com' && password === 'wildlife123') {
-      // For test credentials, bypass the actual authentication
+      // For test credentials, bypass the actual authentication but set user manually
       toast.success('Test login successful!');
-      // Small delay to show the toast before redirecting
+      setIsLoading(false);
+      setError(null);
       setTimeout(() => {
+        // Manually set user in AuthContext to simulate login
+        setUser({
+          id: 'test-user-id',
+          email: 'test@wildlife.com',
+          user_metadata: { name: 'Test User' },
+          app_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          role: 'authenticated',
+          updated_at: new Date().toISOString()
+        } as any);
         navigate('/');
       }, 500);
       return;
@@ -49,8 +63,8 @@ const Login: React.FC = () => {
     setPassword('wildlife123');
     // Automatically submit the form with test credentials
     setTimeout(() => {
-      toast.success('Test login successful!');
-      navigate('/');
+      // Removed toast and navigate here to avoid premature navigation
+      // User should submit the form manually after autofill
     }, 500);
   };
   return <div className="min-h-screen flex items-center justify-center bg-cover bg-center px-4" style={{

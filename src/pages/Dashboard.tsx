@@ -34,30 +34,6 @@ const Dashboard: React.FC = () => {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  // Filtered data based on search
-  const filteredQuizzes = quizzes.length > 0 ? quizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleQuizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredAnimals = animals.length > 0 ? animals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleAnimals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Fetch quizzes, animals, and user badges in parallel
-        const [quizzesData, animalsData, badgesData] = await Promise.all([getQuizzes(), getAnimals(), user ? getUserBadges(user.id) : []]);
-        setQuizzes(quizzesData);
-        setAnimals(animalsData);
-        setBadges(badgesData);
-        // Save data for offline use
-        saveQuizzesToLocalStorage(quizzesData);
-        saveAnimalsToLocalStorage(animalsData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [user]);
   // Sample educational content
   const educationalContent = {
     title: 'Conservation Resources',
@@ -106,6 +82,9 @@ const Dashboard: React.FC = () => {
     description: 'Critically endangered due to poaching for their horns',
     image_url: 'https://images.unsplash.com/photo-1589652717521-10c0d092dea9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
   }];
+  // Filtered data based on search
+  const filteredQuizzes = quizzes.length > 0 ? quizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleQuizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredAnimals = animals.length > 0 ? animals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleAnimals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase()));
   return <div className="max-w-6xl mx-auto">
       {/* Welcome Section */}
       <section className="mb-10">
