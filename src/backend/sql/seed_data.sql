@@ -283,16 +283,16 @@ SELECT
 FROM users u, generate_series(1, 5) -- 5 activities per user
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_conservation_organizations_focus ON conservation_organizations USING GIN(focus_areas);
-CREATE INDEX IF NOT EXISTS idx_educational_content_category ON educational_content(category);
-CREATE INDEX IF NOT EXISTS idx_educational_content_tags ON educational_content USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_daily_tips_category ON daily_tips(category);
-CREATE INDEX IF NOT EXISTS idx_success_stories_species ON success_stories(species);
-CREATE INDEX IF NOT EXISTS idx_success_stories_year ON success_stories(year);
-CREATE INDEX IF NOT EXISTS idx_learning_paths_difficulty ON learning_paths(difficulty);
-CREATE INDEX IF NOT EXISTS idx_user_engagement_user_id ON user_engagement(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_engagement_timestamp ON user_engagement(timestamp);
-CREATE INDEX IF NOT EXISTS idx_platform_milestones_achieved ON platform_milestones(achieved);
+CREATE INDEX idx_conservation_organizations_focus ON conservation_organizations USING GIN(focus_areas);
+CREATE INDEX idx_educational_content_category ON educational_content(category);
+CREATE INDEX idx_educational_content_tags ON educational_content USING GIN(tags);
+CREATE INDEX idx_daily_tips_category ON daily_tips(category);
+CREATE INDEX idx_success_stories_species ON success_stories(species);
+CREATE INDEX idx_success_stories_year ON success_stories(year);
+CREATE INDEX idx_learning_paths_difficulty ON learning_paths(difficulty);
+CREATE INDEX idx_user_engagement_user_id ON user_engagement(user_id);
+CREATE INDEX idx_user_engagement_timestamp ON user_engagement(timestamp);
+CREATE INDEX idx_platform_milestones_achieved ON platform_milestones(achieved);
 
 -- Update statistics
 UPDATE platform_stats SET 
