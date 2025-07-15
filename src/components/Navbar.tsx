@@ -10,9 +10,9 @@ import {
   HomeIcon, 
   LogOutIcon, 
   SettingsIcon,
-  ShieldIcon,
   TreePineIcon,
-  BellIcon
+  BellIcon,
+  TrendingUpIcon
 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -21,6 +21,53 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  // Mock notifications data
+  const notifications = [
+    {
+      id: 1,
+      type: 'achievement',
+      title: 'New Badge Earned!',
+      message: 'You earned the "Wildlife Enthusiast" badge',
+      time: '2 minutes ago',
+      read: false,
+      icon: AwardIcon,
+      color: 'text-amber-600'
+    },
+    {
+      id: 2,
+      type: 'quiz',
+      title: 'New Quiz Available',
+      message: 'Test your knowledge on Arctic Animals',
+      time: '1 hour ago',
+      read: false,
+      icon: BookOpenIcon,
+      color: 'text-blue-600'
+    },
+    {
+      id: 3,
+      type: 'conservation',
+      title: 'Conservation Update',
+      message: 'Your support helped protect 50 acres of rainforest',
+      time: '3 hours ago',
+      read: true,
+      icon: TreePineIcon,
+      color: 'text-green-600'
+    },
+    {
+      id: 4,
+      type: 'progress',
+      title: 'Learning Milestone',
+      message: 'You have completed 10 quizzes this week!',
+      time: '1 day ago',
+      read: true,
+      icon: TrendingUpIcon,
+      color: 'text-purple-600'
+    }
+  ];
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   // Handle scroll effect
   useEffect(() => {
@@ -30,6 +77,19 @@ const Navbar: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.notifications-dropdown') && !target.closest('.notifications-button')) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSignOut = async () => {
@@ -112,16 +172,84 @@ const Navbar: React.FC = () => {
             ))}
 
             {/* Notifications */}
-            <button className={`relative p-2 rounded-lg transition-all duration-200 ${
-              isScrolled
-                ? 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                : 'text-white/90 hover:text-white hover:bg-white/10'
-            }`}>
-              <BellIcon className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-bold"></span>
-              </span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className={`notifications-button relative p-2 rounded-lg transition-all duration-200 ${
+                  isScrolled
+                    ? 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <BellIcon className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">{unreadCount}</span>
+                  </span>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {isNotificationsOpen && (
+                <div className="notifications-dropdown absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <span className="text-sm text-gray-500">{unreadCount} unread</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => {
+                        const IconComponent = notification.icon;
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                              !notification.read ? 'bg-blue-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div className={`p-2 rounded-lg ${!notification.read ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                                <IconComponent className={`h-4 w-4 ${notification.color}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {notification.time}
+                                </p>
+                              </div>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="px-4 py-8 text-center">
+                        <BellIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500">No notifications yet</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      View all notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User Menu */}
             <div className="relative group">
