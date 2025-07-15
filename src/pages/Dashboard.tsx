@@ -2,218 +2,460 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getQuizzes, getAnimals, getUserBadges } from '../services/supabaseClient';
-import { BookOpenIcon, AwardIcon, ChevronRightIcon } from 'lucide-react';
+import { 
+  BookOpenIcon, 
+  AwardIcon, 
+  ChevronRightIcon, 
+  TrendingUpIcon,
+  LeafIcon,
+  StarIcon,
+  PlayIcon,
+  EyeIcon,
+  ShieldIcon,
+  ArrowRightIcon
+} from 'lucide-react';
 import { toast } from 'sonner';
-import SearchBar from '../components/SearchBar';
-import ConservationTips from '../components/ConservationTips';
-import EducationalContent from '../components/EducationalContent';
-import { saveQuizzesToLocalStorage, saveAnimalsToLocalStorage } from '../services/offlineStorage';
+
 interface Quiz {
   id: string;
   title: string;
   description: string;
   image_url: string;
+  difficulty?: string;
+  questions?: any[];
 }
+
 interface Animal {
   id: string;
   name: string;
   description: string;
   image_url: string;
+  conservation_status?: string;
+  habitat?: string;
 }
+
 interface Badge {
   id: string;
   type: string;
   awarded_at: string;
 }
+
+interface DashboardStats {
+  totalQuizzes: number;
+  completedQuizzes: number;
+  totalBadges: number;
+  averageScore: number;
+}
+
 const Dashboard: React.FC = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [featuredAnimals, setFeaturedAnimals] = useState<Animal[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalQuizzes: 0,
+    completedQuizzes: 0,
+    totalBadges: 0,
+    averageScore: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  // Sample educational content
-  const educationalContent = {
-    title: 'Conservation Resources',
-    items: [{
-      title: 'Wildlife Conservation Basics',
-      description: 'Learn the fundamentals of wildlife conservation and why it matters for our planet.',
-      imageUrl: 'https://images.unsplash.com/photo-1541848156497-67cadcfbc7de?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      link: '#conservation-basics'
-    }, {
-      title: 'Habitat Protection',
-      description: 'Discover why protecting natural habitats is crucial for wildlife survival.',
-      imageUrl: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-      link: '#habitat-protection'
-    }]
+
+  // Sample data for demonstration
+  const sampleQuizzes: Quiz[] = [
+    {
+      id: '1',
+      title: 'African Wildlife Safari',
+      description: "Test your knowledge about Africa's magnificent wildlife",
+      image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800',
+      difficulty: 'Medium'
+    },
+    {
+      id: '2',
+      title: 'Marine Giants',
+      description: 'Explore the world of ocean giants and marine creatures',
+      image_url: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?w=800',
+      difficulty: 'Easy'
+    },
+    {
+      id: '3',
+      title: 'Endangered Species Crisis',
+      description: 'Learn about critically endangered animals worldwide',
+      image_url: 'https://images.unsplash.com/photo-1509149398892-d4e0b4f36ad9?w=800',
+      difficulty: 'Hard'
+    }
+  ];
+
+  const sampleAnimals: Animal[] = [
+    {
+      id: '1',
+      name: 'African Elephant',
+      description: 'The largest living terrestrial animal and one of the most iconic species in Africa.',
+      image_url: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800',
+      conservation_status: 'Endangered',
+      habitat: 'African savannas, grasslands, and forests'
+    },
+    {
+      id: '2',
+      name: 'Bengal Tiger',
+      description: 'A magnificent big cat native to the Indian subcontinent.',
+      image_url: 'https://images.unsplash.com/photo-1551969014-7d2c4cddf0b6?w=800',
+      conservation_status: 'Endangered',
+      habitat: 'Tropical forests, grasslands, mangroves'
+    },
+    {
+      id: '3',
+      name: 'Giant Panda',
+      description: 'An endangered bear species endemic to central China.',
+      image_url: 'https://images.unsplash.com/photo-1539732864045-c83a8af16f46?w=800',
+      conservation_status: 'Vulnerable',
+      habitat: 'Bamboo forests in central China'
+    }
+  ];
+
+  const conservationTips = [
+    {
+      title: 'Reduce Plastic Usage',
+      description: 'Use reusable bags, bottles, and containers to protect marine life.',
+      icon: '🌊',
+      impact: 'High'
+    },
+    {
+      title: 'Support Eco-Tourism',
+      description: 'Choose sustainable tourism that supports local conservation efforts.',
+      icon: '🦋',
+      impact: 'Medium'
+    },
+    {
+      title: 'Plant Native Species',
+      description: 'Create habitats for local wildlife by planting native plants.',
+      icon: '🌱',
+      impact: 'High'
+    }
+  ];
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Try to load from API first, fallback to sample data
+        try {
+          const [quizzesData, animalsData, badgesData] = await Promise.all([
+            getQuizzes(),
+            getAnimals(),
+            user ? getUserBadges(user.id) : Promise.resolve([])
+          ]);
+          
+          setQuizzes(quizzesData.length > 0 ? quizzesData : sampleQuizzes);
+          setAnimals(animalsData.length > 0 ? animalsData : sampleAnimals);
+          setBadges(badgesData || []);
+          setFeaturedAnimals((animalsData.length > 0 ? animalsData : sampleAnimals).slice(0, 3));
+          
+          setStats({
+            totalQuizzes: quizzesData.length || sampleQuizzes.length,
+            completedQuizzes: 0, // This would come from user's quiz results
+            totalBadges: badgesData?.length || 0,
+            averageScore: 0 // This would be calculated from quiz results
+          });
+        } catch (error) {
+          console.log('Using sample data due to API error:', error);
+          setQuizzes(sampleQuizzes);
+          setAnimals(sampleAnimals);
+          setFeaturedAnimals(sampleAnimals.slice(0, 3));
+          setBadges([]);
+          setStats({
+            totalQuizzes: sampleQuizzes.length,
+            completedQuizzes: 0,
+            totalBadges: 0,
+            averageScore: 0
+          });
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Critically Endangered':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'Endangered':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'Vulnerable':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Near Threatened':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-green-100 text-green-800 border-green-200';
+    }
   };
-  // For demonstration purposes, let's create some sample data
-  const sampleQuizzes: Quiz[] = [{
-    id: '1',
-    title: 'Mountain Gorillas',
-    description: "Test your knowledge about Rwanda's endangered mountain gorillas",
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }, {
-    id: '2',
-    title: 'African Elephants',
-    description: 'Learn about the gentle giants of the savanna',
-    image_url: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }, {
-    id: '3',
-    title: 'Black Rhinos',
-    description: 'Discover facts about the critically endangered black rhino',
-    image_url: 'https://images.unsplash.com/photo-1589652717521-10c0d092dea9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }];
-  const sampleAnimals: Animal[] = [{
-    id: '1',
-    name: 'Mountain Gorilla',
-    description: 'The mountain gorilla is one of the most endangered great apes',
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }, {
-    id: '2',
-    name: 'African Elephant',
-    description: 'The largest land mammal on Earth, known for their intelligence',
-    image_url: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }, {
-    id: '3',
-    name: 'Black Rhino',
-    description: 'Critically endangered due to poaching for their horns',
-    image_url: 'https://images.unsplash.com/photo-1589652717521-10c0d092dea9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'
-  }];
-  // Filtered data based on search
-  const filteredQuizzes = quizzes.length > 0 ? quizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleQuizzes.filter(quiz => quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) || quiz.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredAnimals = animals.length > 0 ? animals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase())) : sampleAnimals.filter(animal => animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || animal.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  return <div className="max-w-6xl mx-auto">
-      {/* Welcome Section */}
-      <section className="mb-10">
-        <div className="bg-green-600 text-white rounded-lg p-6 shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            Welcome, {user?.user_metadata?.name || 'Wildlife Guardian'}!
-          </h1>
-          <p className="text-green-100">
-            Explore, learn, and earn badges as you discover the amazing wildlife
-            of Africa.
-          </p>
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy':
+        return 'bg-green-100 text-green-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'hard':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your wildlife journey...</p>
         </div>
-      </section>
-      {/* Search Section */}
-      <section className="mb-8">
-        <SearchBar onSearch={setSearchQuery} placeholder="Search for animals or quizzes..." />
-      </section>
-      {isLoading ? <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-        </div> : <>
-          {/* Quizzes Section */}
-          <section className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                <BookOpenIcon className="h-5 w-5 mr-2 text-green-600" />
-                Available Quizzes
-              </h2>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
+      <div className="container mx-auto px-4 lg:px-6">
+        {/* Welcome Section */}
+        <div className="mb-8 animate-fade-in">
+          <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-2xl p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="bg-white/20 p-3 rounded-full">
+                  <ShieldIcon className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold font-['Playfair_Display']">
+                    Welcome back, {user?.user_metadata?.name || 'Guardian'}!
+                  </h1>
+                  <p className="text-white/90 text-lg">
+                    Ready to continue your wildlife conservation journey?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    <BookOpenIcon className="h-6 w-6 text-white" />
+                    <span className="text-white/90">Quizzes</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white mt-1">{stats.totalQuizzes}</div>
+                </div>
+                
+                <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    <AwardIcon className="h-6 w-6 text-white" />
+                    <span className="text-white/90">Badges</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white mt-1">{stats.totalBadges}</div>
+                </div>
+                
+                <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    <LeafIcon className="h-6 w-6 text-white" />
+                    <span className="text-white/90">Animals</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white mt-1">{animals.length}</div>
+                </div>
+                
+                <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUpIcon className="h-6 w-6 text-white" />
+                    <span className="text-white/90">Progress</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white mt-1">85%</div>
+                </div>
+              </div>
             </div>
-            {filteredQuizzes.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredQuizzes.map(quiz => <Link key={quiz.id} to={`/quiz/${quiz.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="h-40 overflow-hidden">
-                      <img src={quiz.image_url} alt={quiz.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">
-                        {quiz.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-3">
-                        {quiz.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-green-600 text-sm font-medium">
-                          Take Quiz
-                        </span>
-                        <ChevronRightIcon className="h-5 w-5 text-green-600" />
-                      </div>
-                    </div>
-                  </Link>)}
-              </div> : <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <p className="text-gray-600">
-                  No quizzes found matching your search criteria.
-                </p>
-              </div>}
-          </section>
-          {/* Animals Section */}
-          <section className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Discover Wildlife
-              </h2>
+          </div>
+        </div>
+
+        {/* Featured Quizzes Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 font-['Playfair_Display']">Featured Quizzes</h2>
+              <p className="text-gray-600 mt-1">Test your knowledge and earn badges</p>
             </div>
-            {filteredAnimals.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAnimals.map(animal => <Link key={animal.id} to={`/animal/${animal.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="h-40 overflow-hidden">
-                      <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">
-                        {animal.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-3">
-                        {animal.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-green-600 text-sm font-medium">
-                          Learn More
-                        </span>
-                        <ChevronRightIcon className="h-5 w-5 text-green-600" />
-                      </div>
-                    </div>
-                  </Link>)}
-              </div> : <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <p className="text-gray-600">
-                  No animals found matching your search criteria.
-                </p>
-              </div>}
-          </section>
-          {/* Conservation Tips Section */}
-          {!searchQuery && <section className="mb-10">
-              <ConservationTips />
-            </section>}
-          {/* Educational Content Section */}
-          {!searchQuery && <section className="mb-10">
-              <EducationalContent title={educationalContent.title} items={educationalContent.items} />
-            </section>}
-          {/* Your Badges Section */}
-          <section className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                <AwardIcon className="h-5 w-5 mr-2 text-green-600" />
-                Your Badges
-              </h2>
-              <Link to="/badges" className="text-green-600 hover:text-green-700 text-sm font-medium">
-                View All
-              </Link>
-            </div>
-            {badges.length > 0 ? <div className="flex flex-wrap gap-4">
-                {badges.map(badge => <div key={badge.id} className="flex flex-col items-center">
-                    <div className="bg-yellow-100 p-3 rounded-full">
-                      <AwardIcon className="h-8 w-8 text-yellow-500" />
-                    </div>
-                    <span className="mt-2 text-sm font-medium">
-                      {badge.type}
+            <Link to="/quiz" className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium group">
+              View All
+              <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {quizzes.slice(0, 3).map((quiz) => (
+              <div key={quiz.id} className="card group cursor-pointer overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={quiz.image_url} 
+                    alt={quiz.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty || 'Medium')}`}>
+                      {quiz.difficulty || 'Medium'}
                     </span>
-                  </div>)}
-              </div> : <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <AwardIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-700 mb-1">
-                  No badges yet
-                </h3>
-                <p className="text-gray-500 text-sm mb-4">
-                  Complete quizzes to earn your first badge!
-                </p>
-                <Link to={`/quiz/${sampleQuizzes[0].id}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
-                  Start a Quiz
-                </Link>
-              </div>}
-          </section>
-        </>}
-    </div>;
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-semibold text-lg mb-1">{quiz.title}</h3>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
+                  <Link 
+                    to={`/quiz/${quiz.id}`}
+                    className="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                  >
+                    <PlayIcon className="mr-2 h-4 w-4" />
+                    Start Quiz
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Featured Animals Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 font-['Playfair_Display']">Animal Spotlight</h2>
+              <p className="text-gray-600 mt-1">Discover fascinating wildlife species</p>
+            </div>
+            <Link to="/animals" className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium group">
+              Explore All
+              <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredAnimals.map((animal) => (
+              <div key={animal.id} className="card group cursor-pointer overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={animal.image_url} 
+                    alt={animal.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(animal.conservation_status || 'Least Concern')}`}>
+                      {animal.conservation_status || 'Least Concern'}
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-semibold text-lg mb-1">{animal.name}</h3>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <p className="text-gray-600 mb-3 line-clamp-2">{animal.description}</p>
+                  {animal.habitat && (
+                    <p className="text-sm text-gray-500 mb-4">
+                      <span className="font-medium">Habitat:</span> {animal.habitat}
+                    </p>
+                  )}
+                  <Link 
+                    to={`/animal/${animal.id}`}
+                    className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                  >
+                    <EyeIcon className="mr-2 h-4 w-4" />
+                    Learn More
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Conservation Tips Section */}
+        <div className="mb-8">
+          <div className="card">
+            <div className="p-8">
+              <div className="flex items-center mb-6">
+                <div className="bg-green-100 p-3 rounded-full mr-4">
+                  <LeafIcon className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 font-['Playfair_Display']">Conservation Tips</h2>
+                  <p className="text-gray-600 mt-1">Simple actions that make a big difference</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {conservationTips.map((tip, index) => (
+                  <div key={index} className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+                    <div className="text-3xl mb-3">{tip.icon}</div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{tip.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3">{tip.description}</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      tip.impact === 'High' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {tip.impact} Impact
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Link to="/quiz/1" className="card p-6 text-center group hover:shadow-lg transition-all duration-300">
+            <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <PlayIcon className="h-8 w-8 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">Take a Quiz</h3>
+            <p className="text-gray-600">Test your wildlife knowledge and earn badges</p>
+            <div className="mt-4 flex items-center justify-center text-emerald-600 font-medium">
+              Start Learning
+              <ChevronRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+          
+          <Link to="/animals" className="card p-6 text-center group hover:shadow-lg transition-all duration-300">
+            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <EyeIcon className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">Explore Animals</h3>
+            <p className="text-gray-600">Discover amazing wildlife from around the world</p>
+            <div className="mt-4 flex items-center justify-center text-blue-600 font-medium">
+              Explore Now
+              <ChevronRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+          
+          <Link to="/badges" className="card p-6 text-center group hover:shadow-lg transition-all duration-300">
+            <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <StarIcon className="h-8 w-8 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">View Achievements</h3>
+            <p className="text-gray-600">Track your progress and collected badges</p>
+            <div className="mt-4 flex items-center justify-center text-amber-600 font-medium">
+              View Badges {badges.length > 0 && `(${badges.length})`}
+              <ChevronRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default Dashboard;

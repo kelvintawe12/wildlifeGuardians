@@ -3,14 +3,22 @@ const {
   register,
   login,
   getMe,
-  updateProfile
+  updateProfile,
+  logout
 } = require('../controllers/authController');
 const {
-  protect
+  authenticateSupabase
 } = require('../middleware/auth');
+
 const router = express.Router();
+
+// Public routes
 router.post('/register', register);
 router.post('/login', login);
-router.get('/me', protect, getMe);
-router.put('/updateprofile', protect, updateProfile);
+
+// Protected routes
+router.get('/me', authenticateSupabase, getMe);
+router.put('/profile', authenticateSupabase, updateProfile);
+router.post('/logout', authenticateSupabase, logout);
+
 module.exports = router;

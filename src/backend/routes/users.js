@@ -1,14 +1,16 @@
 const express = require('express');
 const {
   getProfile,
-  updateProfile,
-  getUserStats
+  updateProfile
 } = require('../controllers/userController');
 const {
-  protect
+  authenticateSupabase
 } = require('../middleware/auth');
+
 const router = express.Router();
-router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateProfile);
-router.get('/stats', protect, getUserStats);
+
+// Protected routes
+router.get('/profile', authenticateSupabase, getProfile);
+router.put('/profile', authenticateSupabase, updateProfile);
+
 module.exports = router;

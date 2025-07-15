@@ -1,20 +1,26 @@
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const Joi = require('joi');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Validation schemas
+const updateProfileSchema = Joi.object({
+  name: Joi.string().min(2).max(50).optional(),
+  avatar_url: Joi.string().uri().allow('').optional()
+});
 
-// @desc    Get user profile
+// @desc    Get user profile with statistics
 // @route   GET /api/users/profile
 // @access  Private
-exports.getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
-    const { data: user, error } = await supabase
+    const userId = req.user.id;
+
+    // Get user profile
+    const { data: user, error: userError } = await global.supabase
       .from('profiles')
       .select('*')
-      .eq('id', req.user.id)
+      .eq('id', userId)
       .single();
 
-    if (error || !user) {
+    if (userError || !user) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
@@ -24,17 +30,21 @@ exports.getProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url || null,
-        created_at: user.created_at
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        }
       }
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Get profile error:', error);
+    res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Internal server error'
     });
   }
 };
@@ -42,12 +52,73 @@ exports.getProfile = async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
-    const { name, avatar_url } = req.body;
+    const userId = req.user.id;
 
-    const updateFields = {};
-    if (name) updateFields.name = name;
+    // Validate request body
+    const { error, value } = updateProfileSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const updateData = {
+      ...value,
+      updated_at: new Date().toISOString()
+    };
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    if (Object.keys(updateData).length === 1) { // Only updated_at
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update'
+      });
+    }
+
+    const { data: user, error: updateError } = await global.supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Update profile error:', updateError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update profile'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+};
+
+module.exports = {
+  getProfile,
+  updateProfile
+};
     if (avatar_url) updateFields.avatar_url = avatar_url;
     updateFields.updated_at = new Date().toISOString();
 
@@ -64,73 +135,7 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url || null
-      }
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
-
-// @desc    Get user stats
-// @route   GET /api/users/stats
-// @access  Private
-exports.getUserStats = async (req, res) => {
-  try {
-    // Get badges count
-    const { count: badgesCount, error: badgesError } = await supabase
-      .from('badges')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('user_id', req.user.id);
-
-    if (badgesError) {
-      throw badgesError;
-    }
-
-    // Get completed quizzes count
-    const { count: quizzesCount, error: quizzesError } = await supabase
-      .from('quiz_results')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('user_id', req.user.id);
-
-    if (quizzesError) {
-      throw quizzesError;
-    }
-
-    // Get average quiz score
-    const { data: averageScoreResult, error: avgError } = await supabase
-      .from('quiz_results')
-      .select('score')
-      .eq('user_id', req.user.id);
-
-    if (avgError) {
-      throw avgError;
-    }
-
-    const scores = averageScoreResult.map(r => r.score);
-    const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-
-    res.status(200).json({
-      success: true,
-      data: {
-        badges_count: badgesCount,
-        quizzes_completed: quizzesCount,
-        average_score: averageScore
-      }
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message
-    });
-  }
+module.exports = {
+  getProfile,
+  updateProfile
 };

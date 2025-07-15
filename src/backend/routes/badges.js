@@ -1,14 +1,25 @@
 const express = require('express');
 const {
   getUserBadges,
+  getBadgeTypes,
   awardBadge,
-  getLeaderboard
+  getBadgeLeaderboard,
+  checkProgressBadges
 } = require('../controllers/badgeController');
 const {
-  protect
+  authenticateSupabase,
+  optionalAuth
 } = require('../middleware/auth');
+
 const router = express.Router();
-router.get('/user', protect, getUserBadges);
-router.post('/', protect, awardBadge); // System or admin only
-router.get('/leaderboard', getLeaderboard);
+
+// Public routes
+router.get('/types', getBadgeTypes);
+router.get('/leaderboard', getBadgeLeaderboard);
+
+// Protected routes
+router.get('/user', authenticateSupabase, getUserBadges);
+router.post('/', authenticateSupabase, awardBadge); // System or admin only
+router.post('/check-progress', authenticateSupabase, checkProgressBadges);
+
 module.exports = router;

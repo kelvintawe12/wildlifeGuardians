@@ -1,149 +1,298 @@
-const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const Joi = require('joi');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Validation schemas
+const registerSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+  name: Joi.string().min(2).max(50).required()
+});
+
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required()
+});
 
 // Generate JWT token
-const generateToken = id => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE || '30d'
+  });
 };
 
-// @desc    Register a new user
+// @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // Validate request body
+    const { error, value } = registerSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
 
-    // Check if user already exists
-    const { data: existingUser, error: existingUserError } = await supabase
+    const { email, password, name } = value;
+
+    // Check if user already exists in Supabase Auth
+    const { data: existingUser, error: checkError } = await global.supabase.auth.admin
+      .listUsers();
+
+    if (checkError) {
+      console.error('Error checking existing users:', checkError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to check user existence'
+      });
+    }
+
+    const userExists = existingUser.users.find(user => user.email === email);
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        error: 'User already exists with this email'
+      });
+    }
+
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await global.supabase.auth.admin
+      .createUser({
+        email,
+        password,
+        email_confirm: true
+      });
+
+    if (authError) {
+      console.error('Supabase auth error:', authError);
+      return res.status(400).json({
+        success: false,
+        error: authError.message
+      });
+    }
+
+    // Create user profile
+    const { data: profile, error: profileError } = await global.supabase
       .from('profiles')
-      .select('*')
-      .eq('email', email)
+      .insert([
+        {
+          id: authData.user.id,
+          name,
+          email,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ])
+      .select()
       .single();
 
-    if (existingUser) {
-      return res.status(400).json({ success: false, error: 'User already exists' });
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      // Try to clean up auth user if profile creation fails
+      await global.supabase.auth.admin.deleteUser(authData.user.id);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create user profile'
+      });
     }
 
-    // Create user using Supabase auth
-    const { user, error: signUpError } = await supabase.auth.api.createUser({
-      email,
-      password,
-      user_metadata: { name }
-    });
+    // Generate JWT token
+    const token = generateToken(authData.user.id);
 
-    if (signUpError) {
-      return res.status(400).json({ success: false, error: signUpError.message });
-    }
-
-    // Return JWT token
     res.status(201).json({
       success: true,
-      token: generateToken(user.id),
-      user: {
-        id: user.id,
-        name: user.user_metadata.name,
-        email: user.email,
-        avatar_url: user.user_metadata.avatar_url || null
+      message: 'User registered successfully',
+      data: {
+        user: {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          avatar_url: profile.avatar_url
+        },
+        token
       }
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error during registration'
+    });
   }
 };
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    const { user, error: signInError } = await supabase.auth.api.signInWithEmail(email, password);
-
-    if (signInError || !user) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    // Validate request body
+    const { error, value } = loginSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
     }
 
-    // Return JWT token
+    const { email, password } = value;
+
+    // Sign in with Supabase
+    const { data: authData, error: authError } = await global.supabase.auth
+      .signInWithPassword({
+        email,
+        password
+      });
+
+    if (authError) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials'
+      });
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await global.supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch user profile'
+      });
+    }
+
+    // Generate custom JWT token
+    const token = generateToken(authData.user.id);
+
     res.status(200).json({
       success: true,
-      token: generateToken(user.id),
-      user: {
-        id: user.id,
-        name: user.user_metadata.name,
-        email: user.email,
-        avatar_url: user.user_metadata.avatar_url || null
+      message: 'User logged in successfully',
+      data: {
+        user: {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          avatar_url: profile.avatar_url
+        },
+        token,
+        supabaseToken: authData.session.access_token
       }
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error during login'
+    });
   }
 };
 
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
-exports.getMe = async (req, res) => {
+const getMe = async (req, res) => {
   try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', req.user.id)
-      .single();
-
-    if (error || !user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-
+    const user = req.user;
+    
     res.status(200).json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url || null
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          created_at: user.created_at
+        }
       }
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('Get me error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user information'
+    });
   }
 };
 
 // @desc    Update user profile
-// @route   PUT /api/auth/updateprofile
+// @route   PUT /api/auth/profile
 // @access  Private
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
     const { name, avatar_url } = req.body;
+    const userId = req.user.id;
 
-    const updateFields = {};
-    if (name) updateFields.name = name;
-    if (avatar_url) updateFields.avatar_url = avatar_url;
-    updateFields.updated_at = new Date().toISOString();
+    const updateData = { updated_at: new Date().toISOString() };
+    if (name) updateData.name = name;
+    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .update(updateFields)
-      .eq('id', req.user.id)
+    const { data: profile, error } = await global.supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
       .single();
 
-    if (error || !user) {
-      return res.status(404).json({ success: false, error: 'User not found or update failed' });
+    if (error) {
+      console.error('Profile update error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update profile'
+      });
     }
 
     res.status(200).json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url || null
+      message: 'Profile updated successfully',
+      data: {
+        user: profile
       }
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error during profile update'
+    });
   }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = async (req, res) => {
+  try {
+    // Sign out from Supabase (if using Supabase session)
+    if (req.authUser) {
+      await global.supabase.auth.signOut();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to logout'
+    });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getMe,
+  updateProfile,
+  logout
 };

@@ -4,15 +4,26 @@ const {
   getAnimalById,
   createAnimal,
   updateAnimal,
-  deleteAnimal
+  deleteAnimal,
+  getConservationStatuses,
+  getFeaturedAnimals
 } = require('../controllers/animalController');
 const {
-  protect
+  authenticateSupabase,
+  optionalAuth
 } = require('../middleware/auth');
+
 const router = express.Router();
-router.get('/', getAnimals);
+
+// Public routes
+router.get('/', optionalAuth, getAnimals);
+router.get('/featured', getFeaturedAnimals);
+router.get('/conservation-statuses', getConservationStatuses);
 router.get('/:id', getAnimalById);
-router.post('/', protect, createAnimal); // Admin only
-router.put('/:id', protect, updateAnimal); // Admin only
-router.delete('/:id', protect, deleteAnimal); // Admin only
+
+// Protected routes (Admin only)
+router.post('/', authenticateSupabase, createAnimal);
+router.put('/:id', authenticateSupabase, updateAnimal);
+router.delete('/:id', authenticateSupabase, deleteAnimal);
+
 module.exports = router;

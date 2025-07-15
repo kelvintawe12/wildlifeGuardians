@@ -3,20 +3,25 @@ const {
   getQuizzes,
   getQuizById,
   createQuiz,
-  updateQuiz,
-  deleteQuiz,
-  saveQuizResult,
-  getUserQuizResults
+  submitQuiz,
+  getUserQuizResults,
+  getQuizStats
 } = require('../controllers/quizController');
 const {
-  protect
+  authenticateSupabase,
+  optionalAuth
 } = require('../middleware/auth');
+
 const router = express.Router();
-router.get('/', getQuizzes);
+
+// Public routes
+router.get('/', optionalAuth, getQuizzes);
 router.get('/:id', getQuizById);
-router.post('/', protect, createQuiz); // Admin only
-router.put('/:id', protect, updateQuiz); // Admin only
-router.delete('/:id', protect, deleteQuiz); // Admin only
-router.post('/results', protect, saveQuizResult);
-router.get('/results/user', protect, getUserQuizResults);
+router.get('/:id/stats', getQuizStats);
+
+// Protected routes
+router.post('/', authenticateSupabase, createQuiz); // Admin only
+router.post('/:id/submit', authenticateSupabase, submitQuiz);
+router.get('/results/user', authenticateSupabase, getUserQuizResults);
+
 module.exports = router;
