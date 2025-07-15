@@ -24,6 +24,11 @@ import UserManagement from './pages/admin/UserManagement';
 import QuizManagement from './pages/admin/QuizManagement';
 import Analytics from './pages/admin/Analytics';
 import AdminSettings from './pages/admin/AdminSettings';
+import AuditLogs from './pages/admin/AuditLogs';
+import BadgeManagement from './pages/admin/BadgeManagement';
+import ContentManagement from './pages/admin/ContentManagement';
+import DatabaseManagement from './pages/admin/DatabaseManagement';
+import SecurityCenter from './pages/admin/SecurityCenter';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
@@ -66,6 +71,31 @@ export function App() {
             <Route path="/admin/settings" element={
               <AdminProtectedRoute>
                 <AdminSettings />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/audit" element={
+              <AdminProtectedRoute>
+                <AuditLogs />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/badges" element={
+              <AdminProtectedRoute>
+                <BadgeManagement />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/content" element={
+              <AdminProtectedRoute>
+                <ContentManagement />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/database" element={
+              <AdminProtectedRoute>
+                <DatabaseManagement />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/security" element={
+              <AdminProtectedRoute>
+                <SecurityCenter />
               </AdminProtectedRoute>
             } />
             
