@@ -1,11 +1,9 @@
 {
-  "version": 2,
-  "framework": "vite",
-  "buildCommand": "npm install --no-optional && npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!api/.*).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
