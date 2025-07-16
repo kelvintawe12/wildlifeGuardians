@@ -1,4 +1,3 @@
-import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client using environment variables

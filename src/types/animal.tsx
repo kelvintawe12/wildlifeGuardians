@@ -1,4 +1,3 @@
-import React from 'react';
 export interface Animal {
   id: string;
   name: string;

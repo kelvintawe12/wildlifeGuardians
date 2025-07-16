@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+.npm
+npm-debug.log*
+
+# Backend folder
+src/backend
+
+# Development files
+.env.local
+.env.development
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+# Package locks (let Vercel handle dependency resolution)
+package-lock.json
+yarn.lock

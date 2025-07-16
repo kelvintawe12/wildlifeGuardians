@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserBadges, getLeaderboard } from '../services/supabaseClient';
+import { getUserBadges } from '../services/apiClient';
 import { AwardIcon, TrophyIcon, UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 interface Badge {
@@ -28,10 +28,32 @@ const Badges: React.FC = () => {
       try {
         setIsLoading(true);
         if (user) {
-          // Fetch user badges and leaderboard in parallel
-          const [badgesData, leaderboardData] = await Promise.all([getUserBadges(user.id), getLeaderboard()]);
+          // Fetch user badges
+          const badgesData = await getUserBadges();
           setBadges(badgesData);
-          setLeaderboard(leaderboardData);
+          
+          // For now, use sample leaderboard data since the endpoint isn't available
+          const sampleLeaderboard: LeaderboardUser[] = [
+            {
+              id: '1',
+              name: 'Wildlife Protector',
+              avatar_url: null,
+              badges: { count: 15 }
+            },
+            {
+              id: '2', 
+              name: 'Conservation Hero',
+              avatar_url: null,
+              badges: { count: 12 }
+            },
+            {
+              id: '3',
+              name: 'Nature Defender',
+              avatar_url: null,
+              badges: { count: 8 }
+            }
+          ];
+          setLeaderboard(sampleLeaderboard);
         }
       } catch (error) {
         console.error('Error fetching badges data:', error);

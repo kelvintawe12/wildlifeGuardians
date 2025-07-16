@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{
     // Listen for auth changes
     const {
       data: authListener
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
