@@ -119,23 +119,3 @@ module.exports = {
   getProfile,
   updateProfile
 };
-    if (avatar_url) updateFields.avatar_url = avatar_url;
-    updateFields.updated_at = new Date().toISOString();
-
-    const { data: user, error } = await supabase
-      .from('profiles')
-      .update(updateFields)
-      .eq('id', req.user.id)
-      .single();
-
-    if (error || !user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-module.exports = {
-  getProfile,
-  updateProfile
-};

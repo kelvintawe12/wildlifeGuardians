@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import ChatBot from './ChatBot';
 
 const Layout: React.FC = () => {
   return (
@@ -22,9 +21,6 @@ const Layout: React.FC = () => {
       </main>
       
       <Footer />
-      
-      {/* Floating ChatBot */}
-      <ChatBot />
     </div>
   );
 };

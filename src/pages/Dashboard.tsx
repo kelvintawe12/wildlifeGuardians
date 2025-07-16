@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getQuizzes, getAnimals, getUserBadges } from '../services/supabaseClient';
+import { 
+  getQuizzes, 
+  getAnimals, 
+  getUserBadges, 
+  getDashboardStats,
+  checkApiHealth
+} from '../services/apiClient';
 import { 
   BookOpenIcon, 
   AwardIcon, 
@@ -12,7 +18,9 @@ import {
   PlayIcon,
   EyeIcon,
   ShieldIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  AlertCircleIcon,
+  WifiOffIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,58 +68,7 @@ const Dashboard: React.FC = () => {
     averageScore: 0
   });
   const [isLoading, setIsLoading] = useState(true);
-
-  // Sample data for demonstration
-  const sampleQuizzes: Quiz[] = [
-    {
-      id: '1',
-      title: 'African Wildlife Safari',
-      description: "Test your knowledge about Africa's magnificent wildlife",
-      image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800',
-      difficulty: 'Medium'
-    },
-    {
-      id: '2',
-      title: 'Marine Giants',
-      description: 'Explore the world of ocean giants and marine creatures',
-      image_url: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?w=800',
-      difficulty: 'Easy'
-    },
-    {
-      id: '3',
-      title: 'Endangered Species Crisis',
-      description: 'Learn about critically endangered animals worldwide',
-      image_url: 'https://images.unsplash.com/photo-1509149398892-d4e0b4f36ad9?w=800',
-      difficulty: 'Hard'
-    }
-  ];
-
-  const sampleAnimals: Animal[] = [
-    {
-      id: '1',
-      name: 'African Elephant',
-      description: 'The largest living terrestrial animal and one of the most iconic species in Africa.',
-      image_url: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800',
-      conservation_status: 'Endangered',
-      habitat: 'African savannas, grasslands, and forests'
-    },
-    {
-      id: '2',
-      name: 'Bengal Tiger',
-      description: 'A magnificent big cat native to the Indian subcontinent.',
-      image_url: 'https://images.unsplash.com/photo-1551969014-7d2c4cddf0b6?w=800',
-      conservation_status: 'Endangered',
-      habitat: 'Tropical forests, grasslands, mangroves'
-    },
-    {
-      id: '3',
-      name: 'Giant Panda',
-      description: 'An endangered bear species endemic to central China.',
-      image_url: 'https://images.unsplash.com/photo-1539732864045-c83a8af16f46?w=800',
-      conservation_status: 'Vulnerable',
-      habitat: 'Bamboo forests in central China'
-    }
-  ];
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const conservationTips = [
     {
@@ -138,41 +95,71 @@ const Dashboard: React.FC = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
+        setApiError(null);
         
-        // Try to load from API first, fallback to sample data
+        // Check API health first
         try {
-          const [quizzesData, animalsData, badgesData] = await Promise.all([
-            getQuizzes(),
-            getAnimals(),
-            user ? getUserBadges(user.id) : Promise.resolve([])
-          ]);
-          
-          setQuizzes(quizzesData.length > 0 ? quizzesData : sampleQuizzes);
-          setAnimals(animalsData.length > 0 ? animalsData : sampleAnimals);
-          setBadges(badgesData || []);
-          setFeaturedAnimals((animalsData.length > 0 ? animalsData : sampleAnimals).slice(0, 3));
-          
-          setStats({
-            totalQuizzes: quizzesData.length || sampleQuizzes.length,
-            completedQuizzes: 0, // This would come from user's quiz results
-            totalBadges: badgesData?.length || 0,
-            averageScore: 0 // This would be calculated from quiz results
-          });
+          await checkApiHealth();
         } catch (error) {
-          console.log('Using sample data due to API error:', error);
-          setQuizzes(sampleQuizzes);
-          setAnimals(sampleAnimals);
-          setFeaturedAnimals(sampleAnimals.slice(0, 3));
-          setBadges([]);
-          setStats({
-            totalQuizzes: sampleQuizzes.length,
-            completedQuizzes: 0,
-            totalBadges: 0,
-            averageScore: 0
-          });
+          console.error('API health check failed:', error);
+          setApiError('Backend API is not available. Please check if the server is running.');
+          toast.error('Cannot connect to backend server');
+          setIsLoading(false);
+          return;
         }
+        
+        // Load all data from API
+        const [quizzesData, animalsData, badgesData] = await Promise.allSettled([
+          getQuizzes(),
+          getAnimals(),
+          user ? getUserBadges() : Promise.resolve([])
+        ]);
+        
+        // Process quizzes
+        if (quizzesData.status === 'fulfilled') {
+          setQuizzes(quizzesData.value);
+        } else {
+          console.error('Failed to load quizzes:', quizzesData.reason);
+          setQuizzes([]);
+          toast.error('Failed to load quizzes');
+        }
+        
+        // Process animals
+        if (animalsData.status === 'fulfilled') {
+          setAnimals(animalsData.value);
+          setFeaturedAnimals(animalsData.value.slice(0, 3));
+        } else {
+          console.error('Failed to load animals:', animalsData.reason);
+          setAnimals([]);
+          setFeaturedAnimals([]);
+          toast.error('Failed to load animals');
+        }
+        
+        // Process badges
+        if (badgesData.status === 'fulfilled') {
+          setBadges(badgesData.value);
+        } else {
+          console.error('Failed to load badges:', badgesData.reason);
+          setBadges([]);
+          if (user) {
+            toast.error('Failed to load badges');
+          }
+        }
+        
+        // Calculate stats
+        const quizCount = quizzesData.status === 'fulfilled' ? quizzesData.value.length : 0;
+        const badgeCount = badgesData.status === 'fulfilled' ? badgesData.value.length : 0;
+        
+        setStats({
+          totalQuizzes: quizCount,
+          completedQuizzes: 0, // TODO: Get from quiz results API
+          totalBadges: badgeCount,
+          averageScore: 0 // TODO: Calculate from quiz results
+        });
+        
       } catch (error) {
         console.error('Error loading dashboard data:', error);
+        setApiError('Failed to load dashboard data');
         toast.error('Failed to load dashboard data');
       } finally {
         setIsLoading(false);
@@ -216,6 +203,26 @@ const Dashboard: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your wildlife journey...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <WifiOffIcon className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Connection Error</h2>
+          <p className="text-gray-600 mb-4">{apiError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -296,37 +303,48 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quizzes.slice(0, 3).map((quiz) => (
-              <div key={quiz.id} className="card group cursor-pointer overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={quiz.image_url} 
-                    alt={quiz.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty || 'Medium')}`}>
-                      {quiz.difficulty || 'Medium'}
-                    </span>
+            {quizzes.length > 0 ? (
+              quizzes.slice(0, 3).map((quiz) => (
+                <div key={quiz.id} className="card group cursor-pointer overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={quiz.image_url} 
+                      alt={quiz.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800';
+                      }}
+                    />
+                    <div className="absolute top-4 right-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty || 'Medium')}`}>
+                        {quiz.difficulty || 'Medium'}
+                      </span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-white font-semibold text-lg mb-1">{quiz.title}</h3>
+                    </div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-1">{quiz.title}</h3>
+                  
+                  <div className="p-6">
+                    <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
+                    <Link 
+                      to={`/quiz/${quiz.id}`}
+                      className="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    >
+                      <PlayIcon className="mr-2 h-4 w-4" />
+                      Start Quiz
+                    </Link>
                   </div>
                 </div>
-                
-                <div className="p-6">
-                  <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
-                  <Link 
-                    to={`/quiz/${quiz.id}`}
-                    className="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-                  >
-                    <PlayIcon className="mr-2 h-4 w-4" />
-                    Start Quiz
-                  </Link>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Quizzes Available</h3>
+                <p className="text-gray-600">Check back later for new wildlife quizzes!</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -344,42 +362,53 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredAnimals.map((animal) => (
-              <div key={animal.id} className="card group cursor-pointer overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={animal.image_url} 
-                    alt={animal.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(animal.conservation_status || 'Least Concern')}`}>
-                      {animal.conservation_status || 'Least Concern'}
-                    </span>
+            {featuredAnimals.length > 0 ? (
+              featuredAnimals.map((animal) => (
+                <div key={animal.id} className="card group cursor-pointer overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={animal.image_url} 
+                      alt={animal.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800';
+                      }}
+                    />
+                    <div className="absolute top-4 right-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(animal.conservation_status || 'Least Concern')}`}>
+                        {animal.conservation_status || 'Least Concern'}
+                      </span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-white font-semibold text-lg mb-1">{animal.name}</h3>
+                    </div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-1">{animal.name}</h3>
+                  
+                  <div className="p-6">
+                    <p className="text-gray-600 mb-3 line-clamp-2">{animal.description}</p>
+                    {animal.habitat && (
+                      <p className="text-sm text-gray-500 mb-4">
+                        <span className="font-medium">Habitat:</span> {animal.habitat}
+                      </p>
+                    )}
+                    <Link 
+                      to={`/animal/${animal.id}`}
+                      className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    >
+                      <EyeIcon className="mr-2 h-4 w-4" />
+                      Learn More
+                    </Link>
                   </div>
                 </div>
-                
-                <div className="p-6">
-                  <p className="text-gray-600 mb-3 line-clamp-2">{animal.description}</p>
-                  {animal.habitat && (
-                    <p className="text-sm text-gray-500 mb-4">
-                      <span className="font-medium">Habitat:</span> {animal.habitat}
-                    </p>
-                  )}
-                  <Link 
-                    to={`/animal/${animal.id}`}
-                    className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-                  >
-                    <EyeIcon className="mr-2 h-4 w-4" />
-                    Learn More
-                  </Link>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <LeafIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Animals Available</h3>
+                <p className="text-gray-600">Check back later for amazing wildlife content!</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
