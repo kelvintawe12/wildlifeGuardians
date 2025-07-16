@@ -25,6 +25,20 @@ export const AuthProvider: React.FC<{
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Rate limiting state
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
+  const RATE_LIMIT_DELAY = 2000; // 2 seconds between requests
+
+  // Rate limiting helper
+  const checkRateLimit = () => {
+    const now = Date.now();
+    if (now - lastRequestTime < RATE_LIMIT_DELAY) {
+      throw new Error('Please wait a moment before trying again');
+    }
+    setLastRequestTime(now);
+  };
+
   useEffect(() => {
     // Check active sessions and set the user
     const getSession = async () => {
@@ -48,43 +62,57 @@ export const AuthProvider: React.FC<{
   }, []);
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    const {
-      error
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    return {
-      error
-    };
+    try {
+      checkRateLimit();
+      const {
+        error
+      } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      return {
+        error
+      };
+    } catch (rateLimitError: any) {
+      return {
+        error: { message: rateLimitError.message }
+      };
+    }
   };
   // Sign up with email and password
   const signUp = async (email: string, password: string, name: string) => {
-    const {
-      error
-    } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name
+    try {
+      checkRateLimit();
+      const {
+        error
+      } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name
+          }
+        }
+      });
+      // If signup successful, create a profile
+      if (!error) {
+        const user = (await supabase.auth.getUser()).data.user;
+        if (user) {
+          await supabase.from('profiles').insert({
+            id: user.id,
+            name,
+            created_at: new Date()
+          });
         }
       }
-    });
-    // If signup successful, create a profile
-    if (!error) {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (user) {
-        await supabase.from('profiles').insert({
-          id: user.id,
-          name,
-          created_at: new Date()
-        });
-      }
+      return {
+        error
+      };
+    } catch (rateLimitError: any) {
+      return {
+        error: { message: rateLimitError.message }
+      };
     }
-    return {
-      error
-    };
   };
   // Sign out
   const signOut = async () => {
