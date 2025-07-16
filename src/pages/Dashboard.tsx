@@ -5,7 +5,6 @@ import {
   getQuizzes, 
   getAnimals, 
   getUserBadges, 
-  getDashboardStats,
   checkApiHealth
 } from '../services/apiClient';
 import { 
@@ -19,7 +18,6 @@ import {
   EyeIcon,
   ShieldIcon,
   ArrowRightIcon,
-  AlertCircleIcon,
   WifiOffIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
