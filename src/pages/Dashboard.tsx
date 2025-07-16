@@ -16,7 +16,6 @@ import {
   StarIcon,
   PlayIcon,
   EyeIcon,
-  ShieldIcon,
   ArrowRightIcon,
   WifiOffIcon
 } from 'lucide-react';
@@ -236,16 +235,26 @@ const Dashboard: React.FC = () => {
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
             
             <div className="relative z-10">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="bg-white/20 p-3 rounded-full">
-                  <ShieldIcon className="h-8 w-8 text-white" />
+              <div className="flex items-center space-x-6 mb-6">
+                <div className="relative">
+                  <img 
+                    src="/wildlife-guardians-compact.svg" 
+                    alt="Wildlife Guardians Logo" 
+                    className="w-20 h-20 drop-shadow-2xl"
+                  />
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center animate-pulse">
+                    <StarIcon className="w-3 h-3 text-amber-800" />
+                  </div>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold font-['Playfair_Display']">
+                  <h1 className="text-4xl font-bold font-['Playfair_Display'] mb-2">
                     Welcome back, {user?.user_metadata?.name || 'Guardian'}!
                   </h1>
-                  <p className="text-white/90 text-lg">
+                  <p className="text-white/90 text-lg mb-2">
                     Ready to continue your wildlife conservation journey?
+                  </p>
+                  <p className="text-white/80 text-sm font-medium">
+                    🌱 Learn • 🛡️ Conserve • ✨ Inspire
                   </p>
                 </div>
               </div>

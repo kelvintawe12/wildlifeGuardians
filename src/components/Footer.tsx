@@ -9,7 +9,17 @@ const Footer: React.FC = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="md:col-span-1">
-            <h3 className="text-xl font-bold mb-4">Wildlife Guardians</h3>
+            <div className="flex items-center space-x-3 mb-4">
+              <img 
+                src="/wildlife-guardians-compact.svg" 
+                alt="Wildlife Guardians Logo" 
+                className="w-12 h-12 drop-shadow-lg"
+              />
+              <div>
+                <h3 className="text-xl font-bold">Wildlife Guardians</h3>
+                <p className="text-emerald-200 text-xs">Learn • Conserve • Inspire</p>
+              </div>
+            </div>
             <p className="text-emerald-100 text-sm leading-relaxed mb-4">
               Empowering the next generation through wildlife conservation education and awareness.
             </p>

@@ -123,12 +123,12 @@ const Navbar: React.FC = () => {
               <div className={`absolute inset-0 rounded-full blur-md group-hover:blur-lg transition-all duration-300 ${
                 isScrolled ? 'bg-emerald-200/50' : 'bg-white/20'
               }`}></div>
-              <div className={`relative p-2 rounded-full backdrop-blur-sm border ${
-                isScrolled 
-                  ? 'bg-emerald-100/50 border-emerald-200/50' 
-                  : 'bg-white/10 border-white/20'
-              }`}>
-                <TreePineIcon className={`h-6 w-6 ${isScrolled ? 'text-emerald-600' : 'text-white'}`} />
+              <div className="relative">
+                <img 
+                  src="/wildlife-guardians-compact.svg" 
+                  alt="Wildlife Guardians Logo" 
+                  className="w-12 h-12 drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
+                />
               </div>
             </div>
             <div className="flex flex-col">
@@ -140,7 +140,7 @@ const Navbar: React.FC = () => {
               <span className={`text-xs hidden sm:block ${
                 isScrolled ? 'text-gray-600' : 'text-white/70'
               }`}>
-                Protecting Nature's Future
+                Learn • Conserve • Inspire
               </span>
             </div>
           </Link>
