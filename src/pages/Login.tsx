@@ -1,53 +1,53 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { BookOpenIcon, MailIcon, LockIcon, AlertCircleIcon, ArrowRightIcon } from 'lucide-react';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
+import { BookOpenIcon, MailIcon, LockIcon, AlertCircleIcon, ArrowRightIcon, ShieldCheckIcon } from 'lucide-react';
 import { toast } from 'sonner';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  
   const {
     signIn,
-    setUser
-  } = useAuth();
+    signInWithTestCredentials,
+    error,
+    clearError
+  } = useCustomAuth();
+  
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-    // Check if test credentials are being used
-    if (email === 'test@wildlife.com' && password === 'wildlife123') {
-      // For test credentials, bypass the actual authentication but set user manually
-      toast.success('Test login successful!');
-      setIsLoading(false);
-      setError(null);
-      setTimeout(() => {
-        // Manually set user in AuthContext to simulate login
-        setUser({
-          id: 'test-user-id',
-          email: 'test@wildlife.com',
-          user_metadata: { name: 'Test User' },
-          app_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          role: 'authenticated',
-          updated_at: new Date().toISOString()
-        } as any);
-        navigate('/');
-      }, 500);
-      return;
-    }
+    clearError();
+
     try {
-      const {
-        error
-      } = await signIn(email, password);
-      if (error) {
-        setError(error.message);
-        toast.error('Login failed. Please check your credentials.');
-      } else {
+      await signIn(email, password);
+      toast.success('Login successful! Welcome back to Wildlife Guardians!');
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTestLogin = async () => {
+    setIsLoading(true);
+    clearError();
+
+    try {
+      await signInWithTestCredentials();
+      toast.success('Test login successful! Welcome to Wildlife Guardians!');
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Test login failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
         toast.success('Login successful!');
         navigate('/');
       }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
 import { 
   MenuIcon, 
   XIcon, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useCustomAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -259,9 +259,9 @@ const Navbar: React.FC = () => {
                   : 'bg-white/10 hover:bg-white/20 border-white/20'
               }`}>
                 <div className="relative">
-                  {user?.user_metadata?.avatar_url ? (
+                  {user?.profile_picture ? (
                     <img 
-                      src={user.user_metadata.avatar_url} 
+                      src={user.profile_picture} 
                       alt="Profile" 
                       className="h-8 w-8 rounded-full object-cover"
                     />
@@ -280,7 +280,7 @@ const Navbar: React.FC = () => {
                   <div className={`font-medium text-sm ${
                     isScrolled ? 'text-gray-900' : 'text-white'
                   }`}>
-                    {user?.user_metadata?.name || 'User'}
+                    {user?.name || 'Guardian'}
                   </div>
                   <div className={`text-xs ${
                     isScrolled ? 'text-gray-500' : 'text-white/70'
@@ -294,7 +294,7 @@ const Navbar: React.FC = () => {
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="text-sm font-medium text-gray-900">
-                    {user?.user_metadata?.name || 'User'}
+                    {user?.name || 'Guardian'}
                   </div>
                   <div className="text-sm text-gray-500">
                     {user?.email}

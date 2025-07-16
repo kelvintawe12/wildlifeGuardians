@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { CustomAuthProvider } from './contexts/CustomAuthContext';
 import { Toaster } from 'sonner';
 // Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+import LoginCustom from './pages/LoginCustom';
+import RegisterCustom from './pages/RegisterCustom';
 import Dashboard from './pages/Dashboard';
 import QuizPage from './pages/QuizPage';
 import AnimalInfo from './pages/AnimalInfo';
@@ -16,19 +16,19 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Help from './pages/Help';
 // Components
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteCustom from './components/ProtectedRouteCustom';
 import Layout from './components/Layout';
 import OfflineIndicator from './components/OfflineIndicatorEnhanced';
 import { PWAInstall } from './components/PWAInstall';
 export function App() {
   return <Router>
-      <AuthProvider>
+      <CustomAuthProvider>
         <Toaster position="top-right" />
         <OfflineIndicator />
         <PWAInstall />
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<LoginCustom />} />
+          <Route path="/register" element={<RegisterCustom />} />
           
           {/* Public pages */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -38,25 +38,25 @@ export function App() {
           <Route path="/help" element={<Help />} />
           
           <Route element={<Layout />}>
-            <Route path="/" element={<ProtectedRoute>
+            <Route path="/" element={<ProtectedRouteCustom>
                   <Dashboard />
-                </ProtectedRoute>} />
-            <Route path="/quiz/:id" element={<ProtectedRoute>
+                </ProtectedRouteCustom>} />
+            <Route path="/quiz/:id" element={<ProtectedRouteCustom>
                   <QuizPage />
-                </ProtectedRoute>} />
-            <Route path="/animal/:id" element={<ProtectedRoute>
+                </ProtectedRouteCustom>} />
+            <Route path="/animal/:id" element={<ProtectedRouteCustom>
                   <AnimalInfo />
-                </ProtectedRoute>} />
-            <Route path="/badges" element={<ProtectedRoute>
+                </ProtectedRouteCustom>} />
+            <Route path="/badges" element={<ProtectedRouteCustom>
                   <Badges />
-                </ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute>
+                </ProtectedRouteCustom>} />
+            <Route path="/settings" element={<ProtectedRouteCustom>
                   <Settings />
-                </ProtectedRoute>} />
+                </ProtectedRouteCustom>} />
           </Route>
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
-      </AuthProvider>
+      </CustomAuthProvider>
     </Router>;
 }
