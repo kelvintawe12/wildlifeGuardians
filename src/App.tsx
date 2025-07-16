@@ -18,12 +18,14 @@ import Help from './pages/Help';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import OfflineIndicator from './components/OfflineIndicator';
+import OfflineIndicator from './components/OfflineIndicatorEnhanced';
+import { PWAInstall } from './components/PWAInstall';
 export function App() {
   return <Router>
       <AuthProvider>
         <Toaster position="top-right" />
         <OfflineIndicator />
+        <PWAInstall />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
