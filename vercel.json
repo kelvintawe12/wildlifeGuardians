@@ -3,11 +3,10 @@
   "framework": "vite",
   "buildCommand": "npm install --no-optional && npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": true,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
     }
   ]
 }
