@@ -1,28 +1,50 @@
-# Dependencies
-node_modules
-.npm
-npm-debug.log*
+# Vercel ignore file for backend deployment
 
-# Backend folder
-src/backend
+# Frontend specific files and directories
+dist/
+public/
+index.html
+*.html
+src/components/
+src/pages/
+src/contexts/
+src/types/
+src/services/offlineStorage.tsx
+src/services/supabaseClient.tsx
+src/App.tsx
+src/index.tsx
+src/index.css
+src/env.d.ts
 
 # Development files
+*.log
 .env.local
 .env.development
-*.log
 
-# OS
+# Frontend dependencies and configs
+postcss.config.js
+tailwind.config.js
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+
+# IDE and OS files
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
 
-# IDE
-.vscode
-.idea
-
 # Git
-.git
+.git/
 .gitignore
 
-# Package locks (let Vercel handle dependency resolution)
-package-lock.json
-yarn.lock
+# Documentation (optional - comment out if you want to include)
+README.md
+DEPLOYMENT.md
+
+# Backup files
+*-frontend.*
+deploy-*.ps1
+deploy-*.sh
+restore-*.ps1
+restore-*.sh
