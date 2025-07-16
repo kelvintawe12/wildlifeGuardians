@@ -1,32 +1,13 @@
-# Vercel ignore file for backend deployment
+# Vercel ignore file for frontend deployment
 
-# Frontend specific files and directories
-dist/
-public/
-index.html
-*.html
-src/components/
-src/pages/
-src/contexts/
-src/types/
-src/services/offlineStorage.tsx
-src/services/supabaseClient.tsx
-src/App.tsx
-src/index.tsx
-src/index.css
-src/env.d.ts
+# Backend specific files and directories
+src/backend/
 
 # Development files
 *.log
 .env.local
 .env.development
-
-# Frontend dependencies and configs
-postcss.config.js
-tailwind.config.js
-tsconfig.json
-tsconfig.node.json
-vite.config.ts
+.env.backend
 
 # IDE and OS files
 .vscode/
@@ -36,15 +17,8 @@ Thumbs.db
 
 # Git
 .git/
-.gitignore
-
-# Documentation (optional - comment out if you want to include)
-README.md
-DEPLOYMENT.md
 
 # Backup files
-*-frontend.*
-deploy-*.ps1
-deploy-*.sh
-restore-*.ps1
-restore-*.sh
+*-backend.*
+deploy-backend.ps1
+deploy-backend.sh
