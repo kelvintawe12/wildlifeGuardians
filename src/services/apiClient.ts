@@ -102,7 +102,8 @@ export const checkApiHealth = async () => {
 export const getQuizzes = async (): Promise<Quiz[]> => {
   try {
     const response = await api.get('/quizzes');
-    return response.data.data.quizzes || [];
+    const data = response.data as { data: { quizzes: Quiz[] } };
+    return data.data.quizzes || [];
   } catch (error) {
     console.error('Failed to fetch quizzes:', error);
     throw error;
@@ -112,7 +113,8 @@ export const getQuizzes = async (): Promise<Quiz[]> => {
 export const getQuizById = async (id: string): Promise<Quiz> => {
   try {
     const response = await api.get(`/quizzes/${id}`);
-    return response.data.data.quiz;
+    const data = response.data as { data: { quiz: Quiz } };
+    return data.data.quiz;
   } catch (error) {
     console.error(`Failed to fetch quiz ${id}:`, error);
     throw error;
@@ -127,7 +129,8 @@ export const submitQuiz = async (quizId: string, answers: any[], score: number, 
       time_spent: timeSpent,
       total_questions: totalQuestions
     });
-    return response.data.data.result;
+    const data = response.data as { data: { result: QuizResult } };
+    return data.data.result;
   } catch (error) {
     console.error('Failed to submit quiz:', error);
     throw error;
@@ -138,7 +141,8 @@ export const submitQuiz = async (quizId: string, answers: any[], score: number, 
 export const getAnimals = async (): Promise<Animal[]> => {
   try {
     const response = await api.get('/animals');
-    return response.data.data.animals || [];
+    const data = response.data as { data: { animals: Animal[] } };
+    return data.data.animals || [];
   } catch (error) {
     console.error('Failed to fetch animals:', error);
     throw error;
@@ -148,7 +152,8 @@ export const getAnimals = async (): Promise<Animal[]> => {
 export const getAnimalById = async (id: string): Promise<Animal> => {
   try {
     const response = await api.get(`/animals/${id}`);
-    return response.data.data.animal;
+    const data = response.data as { data: { animal: Animal } };
+    return data.data.animal;
   } catch (error) {
     console.error(`Failed to fetch animal ${id}:`, error);
     throw error;
@@ -159,7 +164,8 @@ export const getAnimalById = async (id: string): Promise<Animal> => {
 export const getBadgeTypes = async () => {
   try {
     const response = await api.get('/badges/types');
-    return response.data.data.badge_types || [];
+    const data = response.data as { data: { badge_types: any[] } };
+    return data.data.badge_types || [];
   } catch (error) {
     console.error('Failed to fetch badge types:', error);
     throw error;
@@ -169,7 +175,8 @@ export const getBadgeTypes = async () => {
 export const getUserBadges = async (): Promise<Badge[]> => {
   try {
     const response = await api.get('/badges/user');
-    return response.data.data.badges || [];
+    const data = response.data as { data: { badges: Badge[] } };
+    return data.data.badges || [];
   } catch (error) {
     console.error('Failed to fetch user badges:', error);
     throw error;
@@ -180,7 +187,8 @@ export const getUserBadges = async (): Promise<Badge[]> => {
 export const getUserProfile = async () => {
   try {
     const response = await api.get('/auth/me');
-    return response.data.data.user;
+    const data = response.data as { data: { user: any } };
+    return data.data.user;
   } catch (error) {
     console.error('Failed to fetch user profile:', error);
     throw error;
@@ -190,7 +198,8 @@ export const getUserProfile = async () => {
 export const updateUserProfile = async (profileData: { name?: string; avatar_url?: string }) => {
   try {
     const response = await api.put('/auth/profile', profileData);
-    return response.data.data.user;
+    const data = response.data as { data: { user: any } };
+    return data.data.user;
   } catch (error) {
     console.error('Failed to update user profile:', error);
     throw error;
@@ -207,9 +216,15 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       api.get('/badges/user')
     ]);
 
-    const quizzes = quizzesResponse.status === 'fulfilled' ? quizzesResponse.value.data.data.quizzes || [] : [];
-    const animals = animalsResponse.status === 'fulfilled' ? animalsResponse.value.data.data.animals || [] : [];
-    const badges = badgesResponse.status === 'fulfilled' ? badgesResponse.value.data.data.badges || [] : [];
+    const quizzes = quizzesResponse.status === 'fulfilled'
+      ? ((quizzesResponse.value as AxiosResponse<{ data: { quizzes: Quiz[] } }>).data.data.quizzes || [])
+      : [];
+    const animals = animalsResponse.status === 'fulfilled'
+      ? ((animalsResponse.value as AxiosResponse<{ data: { animals: Animal[] } }>).data.data.animals || [])
+      : [];
+    const badges = badgesResponse.status === 'fulfilled'
+      ? ((badgesResponse.value as AxiosResponse<{ data: { badges: Badge[] } }>).data.data.badges || [])
+      : [];
 
     // TODO: Add quiz results endpoint to get completed quizzes and average score
     const stats: DashboardStats = {
@@ -232,7 +247,8 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
-    const { token, user } = response.data.data;
+    const data = response.data as { data: { token: string; user: any } };
+    const { token, user } = data.data;
     localStorage.setItem('authToken', token);
     return { user, token };
   } catch (error) {
@@ -244,7 +260,8 @@ export const login = async (email: string, password: string) => {
 export const register = async (name: string, email: string, password: string) => {
   try {
     const response = await api.post('/auth/register', { name, email, password });
-    const { token, user } = response.data.data;
+    const data = response.data as { data: { token: string; user: any } };
+    const { token, user } = data.data;
     localStorage.setItem('authToken', token);
     return { user, token };
   } catch (error) {

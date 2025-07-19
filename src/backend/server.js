@@ -105,9 +105,18 @@ const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
   module.exports = app;
 } else {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Wildlife Guardians Backend running on port ${PORT}`);
-    console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+    console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
     console.log(`🗄️ Supabase URL: ${supabaseUrl}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use. Please free the port or use a different one.`);
+      process.exit(1);
+    } else {
+      console.error('Server error:', error);
+    }
   });
 }
