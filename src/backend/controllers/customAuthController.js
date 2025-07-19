@@ -185,6 +185,9 @@ const register = async (req, res) => {
     // Create session
     createUserSession(userId, token, req);
 
+    // Log successful registration
+    console.log(`User registered successfully: ${email} (ID: ${userId})`);
+
     // Return user data (without password)
     const { password_hash, ...userWithoutPassword } = newUser;
     
@@ -258,6 +261,9 @@ const login = async (req, res) => {
 
     // Create session
     createUserSession(user.id, token, req);
+
+    // Log successful login
+    console.log(`User logged in successfully: ${email} (ID: ${user.id})`);
 
     // Return user data (without password)
     const { password_hash, ...userWithoutPassword } = user;

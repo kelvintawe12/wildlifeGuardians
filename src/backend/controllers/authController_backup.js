@@ -80,20 +80,6 @@ const register = async (req, res) => {
           id: authData.user.id,
           name,
           email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      // Don't fail registration if profile creation fails
-    }
-          id: authData.user.id,
-          name,
-          email,
           avatar_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

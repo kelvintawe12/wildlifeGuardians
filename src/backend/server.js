@@ -25,6 +25,7 @@ const animalRoutes = require('./routes/animals');
 const badgeRoutes = require('./routes/badges');
 const userRoutes = require('./routes/users');
 const indexRoutes = require('./routes/index');
+const testRoutes = require('./routes/test');
 
 // Import custom auth middleware
 const { corsOptions, securityHeaders } = require('./middleware/customAuth');
@@ -67,6 +68,7 @@ app.use('/api/animals', animalRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', indexRoutes);
+app.use('/api/test', testRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

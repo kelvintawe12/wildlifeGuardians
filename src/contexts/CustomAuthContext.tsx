@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import api, { login as apiLogin, register as apiRegister, logout as apiLogout, getUserProfile, updateUserProfile } from '../services/apiClient';
 
 // Types
 interface User {
@@ -30,47 +31,14 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  signUp: (userData: SignUpData) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithTestCredentials: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile & { name?: string }>) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
 }
 
-interface SignUpData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// API Configuration
-const API_BASE_URL = (import.meta.env as any).VITE_API_URL || 'http://localhost:3001/api';
-const AUTH_ENDPOINTS = {
-  register: `${API_BASE_URL}/auth/register`,
-  login: `${API_BASE_URL}/auth/login`,
-  testLogin: `${API_BASE_URL}/auth/test-login`,
-  logout: `${API_BASE_URL}/auth/logout`,
-  profile: `${API_BASE_URL}/auth/profile`,
-  verifyToken: `${API_BASE_URL}/auth/verify-token`,
-  changePassword: `${API_BASE_URL}/auth/change-password`,
-  deleteAccount: `${API_BASE_URL}/auth/delete-account`
-};
-
-// Rate limiting protection
-class RateLimitError extends Error {
-  constructor(retryAfter: number) {
-    super(`Too many requests. Please try again in ${retryAfter} seconds.`);
-    this.name = 'RateLimitError';
-  }
-}
-
-// Token management
 const TOKEN_KEY = 'wildlife_guardians_token';
 const USER_KEY = 'wildlife_guardians_user';
 const PROFILE_KEY = 'wildlife_guardians_profile';
@@ -107,261 +75,124 @@ const setStoredProfile = (profile: UserProfile): void => {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 };
 
-// API helper function
-const apiRequest = async (url: string, options: RequestInit = {}): Promise<any> => {
-  const token = getStoredToken();
-  
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
-  };
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers
-    }
-  });
-
-  const data = await response.json();
-
-  if (response.status === 429) {
-    const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
-    throw new RateLimitError(retryAfter);
-  }
-
-  if (!response.ok) {
-    throw new Error(data.message || 'An error occurred');
-  }
-
-  return data;
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(getStoredUser());
+  const [profile, setProfile] = useState<UserProfile | null>(getStoredProfile());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!user;
 
-  // Clear error function
   const clearError = () => {
     setError(null);
   };
 
-  // Initialize auth state from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
+      setLoading(true);
       try {
         const token = getStoredToken();
-        const storedUser = getStoredUser();
-        const storedProfile = getStoredProfile();
-
-        if (token && storedUser) {
-          // Verify token is still valid
-          try {
-            await apiRequest(AUTH_ENDPOINTS.verifyToken);
-            setUser(storedUser);
-            setProfile(storedProfile);
-          } catch (error) {
-            // Token is invalid, clear stored data
-            removeStoredToken();
-            console.log('Token verification failed:', error);
-          }
+        if (token) {
+          // Verify token by fetching user profile
+          const userProfile = await getUserProfile();
+          setUser(userProfile);
+          setProfile(userProfile);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        removeStoredToken();
+        setUser(null);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
     };
-
     initializeAuth();
   }, []);
 
-  // Sign up function
-  const signUp = async (userData: SignUpData): Promise<void> => {
+  const signUp = async (name: string, email: string, password: string): Promise<void> => {
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiRequest(AUTH_ENDPOINTS.register, {
-        method: 'POST',
-        body: JSON.stringify(userData)
-      });
-
-      if (response.success) {
-        const { user: newUser, profile: newProfile, token } = response.data;
-        
-        setStoredToken(token);
-        setStoredUser(newUser);
-        setStoredProfile(newProfile);
-        
-        setUser(newUser);
-        setProfile(newProfile);
-      }
-    } catch (error: any) {
-      setError(error.message || 'Registration failed');
-      throw error;
+      const { user: newUser, token } = await apiRegister(name, email, password);
+      setStoredToken(token);
+      setStoredUser(newUser);
+      setUser(newUser);
+      setProfile(null);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Sign in function
   const signIn = async (email: string, password: string): Promise<void> => {
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiRequest(AUTH_ENDPOINTS.login, {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      });
-
-      if (response.success) {
-        const { user: loggedInUser, profile: userProfile, token } = response.data;
-        
-        setStoredToken(token);
-        setStoredUser(loggedInUser);
-        if (userProfile) setStoredProfile(userProfile);
-        
-        setUser(loggedInUser);
-        setProfile(userProfile);
-      }
-    } catch (error: any) {
-      setError(error.message || 'Login failed');
-      throw error;
+      const { user: loggedInUser, token } = await apiLogin(email, password);
+      setStoredToken(token);
+      setStoredUser(loggedInUser);
+      setUser(loggedInUser);
+      const userProfile = await getUserProfile();
+      setStoredProfile(userProfile);
+      setProfile(userProfile);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Test credentials sign in
   const signInWithTestCredentials = async (): Promise<void> => {
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiRequest(AUTH_ENDPOINTS.testLogin, {
-        method: 'POST'
-      });
-
-      if (response.success) {
-        const { user: loggedInUser, profile: userProfile, token } = response.data;
-        
-        setStoredToken(token);
-        setStoredUser(loggedInUser);
-        if (userProfile) setStoredProfile(userProfile);
-        
-        setUser(loggedInUser);
-        setProfile(userProfile);
-      }
-    } catch (error: any) {
-      setError(error.message || 'Test login failed');
-      throw error;
+      const response = await api.post('/auth/test-login');
+      const { user: loggedInUser, token } = response.data.data;
+      setStoredToken(token);
+      setStoredUser(loggedInUser);
+      setUser(loggedInUser);
+      const userProfile = await getUserProfile();
+      setStoredProfile(userProfile);
+      setProfile(userProfile);
+    } catch (err: any) {
+      setError(err.message || 'Test login failed');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Sign out function
   const signOut = async (): Promise<void> => {
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      
-      // Call logout endpoint to invalidate session
-      try {
-        await apiRequest(AUTH_ENDPOINTS.logout, {
-          method: 'POST'
-        });
-      } catch (error) {
-        // Even if logout request fails, we should still clear local data
-        console.log('Logout request failed:', error);
-      }
-
-      // Clear local storage and state
+      await apiLogout();
+    } catch (err) {
+      // Ignore logout errors
+    } finally {
       removeStoredToken();
       setUser(null);
       setProfile(null);
-      setError(null);
-    } catch (error: any) {
-      console.error('Logout error:', error);
-    } finally {
       setLoading(false);
     }
   };
 
-  // Update profile function
   const updateProfile = async (profileData: Partial<UserProfile & { name?: string }>): Promise<void> => {
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiRequest(AUTH_ENDPOINTS.profile, {
-        method: 'PUT',
-        body: JSON.stringify(profileData)
-      });
-
-      if (response.success) {
-        const { user: updatedUser, profile: updatedProfile } = response.data;
-        
-        setStoredUser(updatedUser);
-        setStoredProfile(updatedProfile);
-        
-        setUser(updatedUser);
-        setProfile(updatedProfile);
-      }
-    } catch (error: any) {
-      setError(error.message || 'Profile update failed');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Change password function
-  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      await apiRequest(AUTH_ENDPOINTS.changePassword, {
-        method: 'PUT',
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          confirmPassword: newPassword
-        })
-      });
-    } catch (error: any) {
-      setError(error.message || 'Password change failed');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Delete account function
-  const deleteAccount = async (password: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      await apiRequest(AUTH_ENDPOINTS.deleteAccount, {
-        method: 'DELETE',
-        body: JSON.stringify({ password })
-      });
-
-      // Clear local data after successful deletion
-      removeStoredToken();
-      setUser(null);
-      setProfile(null);
-    } catch (error: any) {
-      setError(error.message || 'Account deletion failed');
-      throw error;
+      const updatedUser = await updateUserProfile(profileData);
+      setStoredUser(updatedUser);
+      setUser(updatedUser);
+      // Optionally update profile state if returned
+    } catch (err: any) {
+      setError(err.message || 'Profile update failed');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -378,16 +209,10 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     signInWithTestCredentials,
     signOut,
     updateProfile,
-    changePassword,
-    deleteAccount,
     clearError
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useCustomAuth = (): AuthContextType => {
