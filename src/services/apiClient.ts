@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+// Extend Window interface to include optional toast and showToast properties
+declare global {
+  interface Window {
+    toast?: {
+      error: (msg: string) => void;
+    };
+    showToast?: (msg: string, type?: string) => void;
+  }
+}
+
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -27,7 +37,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      // Prevent infinite redirect loop
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -274,14 +287,27 @@ export const register = async (name: string, email: string, password: string) =>
     const response = await api.post('/auth/register', { 
       name, 
       email, 
-      password, 
-      confirmPassword: password // Add confirmPassword field
+      password
     });
     const data = response.data as { data: { token: string; user: any } };
     const { token, user } = data.data;
     localStorage.setItem('authToken', token);
     return { user, token };
-  } catch (error) {
+  } catch (error: any) {
+    // Check for duplicate email error (400)
+    if (error.response && error.response.status === 400) {
+      const message = error.response.data?.message || error.response.data?.error || '';
+      if (typeof window !== 'undefined' && message.toLowerCase().includes('email')) {
+        // Show toast notification if available
+        if (window?.toast) {
+          window.toast.error('Email is already registered. Please use a different email.');
+        } else if (window?.showToast) {
+          window.showToast('Email is already registered. Please use a different email.', 'error');
+        } else {
+          alert('Email is already registered. Please use a different email.');
+        }
+      }
+    }
     console.error('Registration failed:', error);
     throw error;
   }

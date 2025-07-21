@@ -71,8 +71,12 @@ const getStoredProfile = (): UserProfile | null => {
   return profileData ? JSON.parse(profileData) : null;
 };
 
-const setStoredProfile = (profile: UserProfile): void => {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+const setStoredProfile = (profile: UserProfile | null): void => {
+  if (profile === null) {
+    localStorage.removeItem(PROFILE_KEY);
+  } else {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  }
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,9 +140,21 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setStoredToken(token);
       setStoredUser(loggedInUser);
       setUser(loggedInUser);
-      const userProfile = await getUserProfile();
-      setStoredProfile(userProfile);
-      setProfile(userProfile);
+      // Set axios default Authorization header immediately
+      import('../services/apiClient').then(({ default: api }) => {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      });
+      try {
+        const userProfile = await getUserProfile();
+        setStoredProfile(userProfile);
+        setProfile(userProfile);
+      } catch (profileErr: any) {
+        if (typeof window !== 'undefined' && window.toast) {
+          window.toast.error('Logged in, but failed to fetch user profile.');
+        }
+        setStoredProfile(null);
+        setProfile(null);
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed');
       throw err;
@@ -152,7 +168,7 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     clearError();
     try {
       const response = await api.post('/auth/test-login');
-      const { user: loggedInUser, token } = response.data.data;
+      const { user: loggedInUser, token } = (response.data as { data: { user: User; token: string } }).data;
       setStoredToken(token);
       setStoredUser(loggedInUser);
       setUser(loggedInUser);
