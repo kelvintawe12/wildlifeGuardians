@@ -200,6 +200,9 @@ const validateRegistration = (req, res, next) => {
     });
   }
   
+  // Remove confirmPassword before passing to controller
+  delete req.body.confirmPassword;
+  
   next();
 };
 

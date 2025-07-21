@@ -2,17 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const Joi = require('joi');
-
-// Mock database - replace with your actual database
-let users = [];
-let userProfiles = [];
-let userSessions = [];
+const User = require('../models/User');
 
 // Validation schemas
 const registerSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).max(128).required()
+  password: Joi.string().min(6).max(128).required(),
+  confirmPassword: Joi.any().optional()
 });
 
 const loginSchema = Joi.object({
@@ -38,82 +35,10 @@ const generateToken = (userId) => {
   );
 };
 
-const hashPassword = async (password) => {
-  return await bcrypt.hash(password, 12);
-};
-
-const verifyPassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
-};
-
-const findUserByEmail = (email) => {
-  return users.find(user => user.email.toLowerCase() === email.toLowerCase());
-};
-
-const findUserById = (userId) => {
-  return users.find(user => user.id === userId);
-};
-
 const createUserSession = (userId, token, req) => {
-  const sessionId = uuidv4();
-  const session = {
-    id: sessionId,
-    user_id: userId,
-    token_hash: bcrypt.hashSync(token, 10),
-    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    created_at: new Date(),
-    ip_address: req.ip || req.connection.remoteAddress,
-    user_agent: req.get('User-Agent'),
-    is_active: true
-  };
-  
-  userSessions.push(session);
-  return session;
+  // Session management can be implemented here if needed
+  return null;
 };
-
-// Test credentials
-const initializeTestUser = async () => {
-  const testUserExists = findUserByEmail('sarah.wilson@wildlifeconservation.org');
-  if (!testUserExists) {
-    const testUserId = uuidv4();
-    const hashedPassword = await hashPassword('Conservation2024!');
-    
-    const testUser = {
-      id: testUserId,
-      email: 'sarah.wilson@wildlifeconservation.org',
-      password_hash: hashedPassword,
-      name: 'Dr. Sarah Wilson',
-      profile_picture: 'https://images.unsplash.com/photo-1494790108755-2616b612b5e5?w=150&h=150&fit=crop&crop=face',
-      created_at: new Date(),
-      updated_at: new Date(),
-      email_verified: true,
-      is_active: true,
-      last_login: null
-    };
-    
-    const testProfile = {
-      id: uuidv4(),
-      user_id: testUserId,
-      bio: 'Marine biologist and wildlife conservationist with over 10 years of experience protecting endangered species. Passionate about educating others on conservation efforts.',
-      location: 'Kenya Wildlife Research Center',
-      interests: ['Marine Biology', 'Endangered Species', 'Conservation Education', 'Ecosystem Restoration'],
-      conservation_level: 'Expert',
-      total_points: 2850,
-      badges_earned: 12,
-      quizzes_completed: 45,
-      favorite_animals: ['African Elephant', 'Mountain Gorilla', 'Green Sea Turtle'],
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-    
-    users.push(testUser);
-    userProfiles.push(testProfile);
-    console.log('✅ Test user initialized: sarah.wilson@wildlifeconservation.org / Conservation2024!');
-  }
-};
-
-// Initialize test user on startup
-initializeTestUser();
 
 // Controllers
 const register = async (req, res) => {
@@ -131,7 +56,7 @@ const register = async (req, res) => {
     const { name, email, password } = value;
 
     // Check if user already exists
-    const existingUser = findUserByEmail(email);
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -139,63 +64,37 @@ const register = async (req, res) => {
       });
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(password);
-
-    // Create user
-    const userId = uuidv4();
-    const newUser = {
-      id: userId,
-      email: email.toLowerCase(),
-      password_hash: passwordHash,
+    // Create user document
+    const newUser = new User({
       name,
-      profile_picture: null,
-      created_at: new Date(),
-      updated_at: new Date(),
-      email_verified: false,
-      is_active: true,
-      last_login: null
-    };
+      email: email.toLowerCase(),
+      password
+    });
 
-    // Create user profile
-    const profileId = uuidv4();
-    const newProfile = {
-      id: profileId,
-      user_id: userId,
-      bio: null,
-      location: null,
-      interests: [],
-      conservation_level: 'Beginner',
-      total_points: 0,
-      badges_earned: 0,
-      quizzes_completed: 0,
-      favorite_animals: [],
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-
-    // Save to "database"
-    users.push(newUser);
-    userProfiles.push(newProfile);
+    // Save user to database (password will be hashed by pre-save hook)
+    await newUser.save();
 
     // Generate JWT token
-    const token = generateToken(userId);
+    const token = generateToken(newUser._id);
 
-    // Create session
-    createUserSession(userId, token, req);
-
-    // Log successful registration
-    console.log(`User registered successfully: ${email} (ID: ${userId})`);
+    // Create session if needed
+    createUserSession(newUser._id, token, req);
 
     // Return user data (without password)
-    const { password_hash, ...userWithoutPassword } = newUser;
-    
+    const userWithoutPassword = {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      avatar_url: newUser.avatar_url,
+      created_at: newUser.created_at,
+      updated_at: newUser.updated_at
+    };
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
         user: userWithoutPassword,
-        profile: newProfile,
         token
       }
     });
@@ -223,8 +122,8 @@ const login = async (req, res) => {
 
     const { email, password } = value;
 
-    // Find user
-    const user = findUserByEmail(email);
+    // Find user by email and select password field
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -232,16 +131,8 @@ const login = async (req, res) => {
       });
     }
 
-    // Check if user is active
-    if (!user.is_active) {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is deactivated'
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, user.password_hash);
+    // Verify password using model method
+    const isPasswordValid = await user.matchPassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -249,30 +140,27 @@ const login = async (req, res) => {
       });
     }
 
-    // Update last login
-    user.last_login = new Date();
-
-    // Find user profile
-    const profile = userProfiles.find(p => p.user_id === user.id);
-
     // Generate JWT token
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
 
-    // Create session
-    createUserSession(user.id, token, req);
-
-    // Log successful login
-    console.log(`User logged in successfully: ${email} (ID: ${user.id})`);
+    // Create session if needed
+    createUserSession(user._id, token, req);
 
     // Return user data (without password)
-    const { password_hash, ...userWithoutPassword } = user;
-    
+    const userWithoutPassword = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+
     res.json({
       success: true,
       message: 'Login successful',
       data: {
         user: userWithoutPassword,
-        profile: profile || null,
         token
       }
     });
