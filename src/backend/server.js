@@ -5,8 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 // Initialize Supabase client (keeping for backward compatibility with existing data)
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'https://exwkogchbuuwzgcgtsnm.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4d2tvZ2NoYnV1d3pnY2d0c25tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3OTQxNzcsImV4cCI6MjA2NzM3MDE3N30.cM5bMhsA7ITtaLfW2iUp57heiE0Zsg3PYLKoTj-WpPw';
 
 let supabase = null;
 if (supabaseUrl && supabaseKey) {
