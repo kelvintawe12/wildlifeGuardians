@@ -161,8 +161,11 @@ const rateLimiter = (maxRequests = 5, windowMs = 15 * 60 * 1000) => {
 // Login Rate Limiting (stricter)
 const loginRateLimiter = rateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
 
+// Test Login Rate Limiting (more lenient for development)
+const testLoginRateLimiter = rateLimiter(50, 5 * 60 * 1000); // 50 attempts per 5 minutes
+
 // Registration Rate Limiting
-const registerRateLimiter = rateLimiter(3, 60 * 60 * 1000); // 3 attempts per hour
+const registerRateLimiter = rateLimiter(50, 10 * 60 * 1000); // 50 attempts per 10 minutes (dev)
 
 // General API Rate Limiting
 const apiRateLimiter = rateLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes
@@ -173,15 +176,15 @@ const validateRegistration = (req, res, next) => {
   
   const errors = [];
   
-  if (!name || name.trim().length < 2) {
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
     errors.push('Name must be at least 2 characters long');
   }
   
-  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+  if (!email || typeof email !== 'string' || !/\S+@\S+\.\S+/.test(email)) {
     errors.push('Valid email address is required');
   }
   
-  if (!password || password.length < 6) {
+  if (!password || typeof password !== 'string' || password.length < 6) {
     errors.push('Password must be at least 6 characters long');
   }
   
@@ -235,6 +238,7 @@ const securityHeaders = (req, res, next) => {
 // CORS Configuration for Authentication
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:3001',
   process.env.FRONTEND_URL || 'https://wildlife-guardiansrwanda.vercel.app'
 ];
 
@@ -259,6 +263,7 @@ module.exports = {
   optionalAuth,
   rateLimiter,
   loginRateLimiter,
+  testLoginRateLimiter,
   registerRateLimiter,
   apiRateLimiter,
   validateRegistration,

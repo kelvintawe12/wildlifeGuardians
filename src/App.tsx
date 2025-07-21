@@ -21,8 +21,9 @@ import Layout from './components/Layout';
 import OfflineIndicator from './components/OfflineIndicatorEnhanced';
 import { PWAInstall } from './components/PWAInstall';
 export function App() {
-  return <Router>
-      <CustomAuthProvider>
+  return (
+    <CustomAuthProvider>
+      <Router>
         <Toaster position="top-right" />
         <OfflineIndicator />
         <PWAInstall />
@@ -57,6 +58,7 @@ export function App() {
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
-      </CustomAuthProvider>
-    </Router>;
+      </Router>
+    </CustomAuthProvider>
+  );
 }

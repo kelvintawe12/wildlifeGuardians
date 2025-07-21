@@ -16,6 +16,7 @@ const {
 const {
   authenticateToken,
   loginRateLimiter,
+  testLoginRateLimiter,
   registerRateLimiter,
   apiRateLimiter,
   validateRegistration,
@@ -56,14 +57,14 @@ router.post('/login',
  * @route POST /api/auth/test-login
  * @desc Quick test user login (for development/demo)
  * @access Public
- * @rateLimit 5 requests per 15 minutes
+ * @rateLimit 50 requests per 5 minutes (more lenient for testing)
  */
-router.post('/test-login', loginRateLimiter, async (req, res) => {
+router.post('/test-login', testLoginRateLimiter, async (req, res) => {
   try {
     // Auto-fill test credentials
     req.body = {
-      email: 'test@wildlife.com',
-      password: 'wildlife123'
+      email: 'sarah.wilson@wildlifeconservation.org',
+      password: 'Conservation2024!'
     };
     
     // Call the login function
@@ -96,6 +97,17 @@ router.post('/logout',
  * @access Private
  */
 router.get('/profile',
+  apiRateLimiter,
+  authenticateToken,
+  getProfile
+);
+
+/**
+ * @route GET /api/auth/me
+ * @desc Get user profile (alias for /profile)
+ * @access Private
+ */
+router.get('/me',
   apiRateLimiter,
   authenticateToken,
   getProfile
@@ -170,9 +182,9 @@ router.get('/status', apiRateLimiter, (req, res) => {
         reset: res.get('X-RateLimit-Reset')
       },
       testCredentials: {
-        email: 'test@wildlife.com',
-        password: 'wildlife123',
-        note: 'Use these credentials for testing'
+        email: 'sarah.wilson@wildlifeconservation.org',
+        password: 'Conservation2024!',
+        note: 'Dr. Sarah Wilson - Marine Biologist & Conservation Expert'
       }
     }
   });

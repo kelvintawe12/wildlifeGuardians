@@ -61,10 +61,10 @@ const Login: React.FC = () => {
   };
 
   const useTestCredentials = () => {
-    setEmail('test@wildlife.com');
-    setPassword('wildlife123');
+    setEmail('sarah.wilson@wildlifeconservation.org');
+    setPassword('Conservation2024!');
     clearError();
-    toast.info('Test credentials filled in!');
+    toast.info('Dr. Sarah Wilson\'s credentials filled in!');
   };
 
   return (
@@ -102,21 +102,22 @@ const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Test Credentials Banner */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+        {/* Demo Account Banner */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <ShieldCheckIcon className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-amber-800">Test Credentials Available</h3>
-              <p className="text-xs text-amber-700 mt-1">
-                <strong>Email:</strong> test@wildlife.com<br />
-                <strong>Password:</strong> wildlife123
+              <h3 className="text-sm font-medium text-emerald-800">Demo Account Available</h3>
+              <p className="text-xs text-emerald-700 mt-1">
+                <strong>Email:</strong> sarah.wilson@wildlifeconservation.org<br />
+                <strong>Password:</strong> Conservation2024!<br />
+                <span className="text-emerald-600">👩‍🔬 Dr. Sarah Wilson - Marine Biologist & Conservation Expert</span>
               </p>
               <div className="mt-3 flex space-x-2">
                 <button
                   type="button"
                   onClick={useTestCredentials}
-                  className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded hover:bg-amber-200 transition-colors"
+                  className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md hover:bg-emerald-200 transition-colors"
                 >
                   Fill Credentials
                 </button>
@@ -124,9 +125,9 @@ const Login: React.FC = () => {
                   type="button"
                   onClick={handleTestLogin}
                   disabled={isLoading}
-                  className="text-xs bg-amber-600 text-white px-2 py-1 rounded hover:bg-amber-700 transition-colors disabled:opacity-50"
+                  className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
                 >
-                  {isLoading ? 'Logging in...' : 'Quick Test Login'}
+                  {isLoading ? 'Logging in...' : 'Quick Demo Login'}
                 </button>
               </div>
             </div>

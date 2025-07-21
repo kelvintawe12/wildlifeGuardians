@@ -1,4 +1,5 @@
-import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
+
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -12,7 +13,7 @@ const api = axios.create({
 });
 
 // Add auth token to requests if available
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+api.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -22,8 +23,8 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 // Handle auth errors
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => {
+  (response) => response,
+  (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       window.location.href = '/login';
@@ -189,7 +190,18 @@ export const getUserProfile = async () => {
     const response = await api.get('/auth/me');
     const data = response.data as { data: { user: any } };
     return data.data.user;
-  } catch (error) {
+  } catch (error: any) {
+    // If 404, try legacy endpoint
+    if (error.response && error.response.status === 404) {
+      try {
+        const legacyResponse = await api.get('/auth/legacy/me');
+        const legacyData = legacyResponse.data as { data: { user: any } };
+        return legacyData.data.user;
+      } catch (legacyError) {
+        console.error('Failed to fetch user profile from legacy endpoint:', legacyError);
+        throw legacyError;
+      }
+    }
     console.error('Failed to fetch user profile:', error);
     throw error;
   }
@@ -217,13 +229,13 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     ]);
 
     const quizzes = quizzesResponse.status === 'fulfilled'
-      ? ((quizzesResponse.value as AxiosResponse<{ data: { quizzes: Quiz[] } }>).data.data.quizzes || [])
+      ? ((quizzesResponse.value as any).data.data.quizzes || [])
       : [];
     const animals = animalsResponse.status === 'fulfilled'
-      ? ((animalsResponse.value as AxiosResponse<{ data: { animals: Animal[] } }>).data.data.animals || [])
+      ? ((animalsResponse.value as any).data.data.animals || [])
       : [];
     const badges = badgesResponse.status === 'fulfilled'
-      ? ((badgesResponse.value as AxiosResponse<{ data: { badges: Badge[] } }>).data.data.badges || [])
+      ? ((badgesResponse.value as any).data.data.badges || [])
       : [];
 
     // TODO: Add quiz results endpoint to get completed quizzes and average score
@@ -259,7 +271,12 @@ export const login = async (email: string, password: string) => {
 
 export const register = async (name: string, email: string, password: string) => {
   try {
-    const response = await api.post('/auth/register', { name, email, password });
+    const response = await api.post('/auth/register', { 
+      name, 
+      email, 
+      password, 
+      confirmPassword: password // Add confirmPassword field
+    });
     const data = response.data as { data: { token: string; user: any } };
     const { token, user } = data.data;
     localStorage.setItem('authToken', token);

@@ -74,17 +74,17 @@ const createUserSession = (userId, token, req) => {
 
 // Test credentials
 const initializeTestUser = async () => {
-  const testUserExists = findUserByEmail('test@wildlife.com');
+  const testUserExists = findUserByEmail('sarah.wilson@wildlifeconservation.org');
   if (!testUserExists) {
     const testUserId = uuidv4();
-    const hashedPassword = await hashPassword('wildlife123');
+    const hashedPassword = await hashPassword('Conservation2024!');
     
     const testUser = {
       id: testUserId,
-      email: 'test@wildlife.com',
+      email: 'sarah.wilson@wildlifeconservation.org',
       password_hash: hashedPassword,
-      name: 'Test Guardian',
-      profile_picture: null,
+      name: 'Dr. Sarah Wilson',
+      profile_picture: 'https://images.unsplash.com/photo-1494790108755-2616b612b5e5?w=150&h=150&fit=crop&crop=face',
       created_at: new Date(),
       updated_at: new Date(),
       email_verified: true,
@@ -95,21 +95,21 @@ const initializeTestUser = async () => {
     const testProfile = {
       id: uuidv4(),
       user_id: testUserId,
-      bio: 'Wildlife conservation enthusiast and test user',
-      location: 'Conservation Area',
-      interests: ['Wildlife Photography', 'Animal Behavior', 'Conservation'],
-      conservation_level: 'Advanced',
-      total_points: 1250,
-      badges_earned: 5,
-      quizzes_completed: 12,
-      favorite_animals: ['Mountain Gorilla', 'African Elephant', 'Snow Leopard'],
+      bio: 'Marine biologist and wildlife conservationist with over 10 years of experience protecting endangered species. Passionate about educating others on conservation efforts.',
+      location: 'Kenya Wildlife Research Center',
+      interests: ['Marine Biology', 'Endangered Species', 'Conservation Education', 'Ecosystem Restoration'],
+      conservation_level: 'Expert',
+      total_points: 2850,
+      badges_earned: 12,
+      quizzes_completed: 45,
+      favorite_animals: ['African Elephant', 'Mountain Gorilla', 'Green Sea Turtle'],
       created_at: new Date(),
       updated_at: new Date()
     };
     
     users.push(testUser);
     userProfiles.push(testProfile);
-    console.log('✅ Test user initialized: test@wildlife.com / wildlife123');
+    console.log('✅ Test user initialized: sarah.wilson@wildlifeconservation.org / Conservation2024!');
   }
 };
 
