@@ -1,8 +1,5 @@
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 const Joi = require('joi');
-const User = require('../models/User');
 
 // Validation schemas
 const registerSchema = Joi.object({
@@ -16,29 +13,6 @@ const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required()
 });
-
-const updateProfileSchema = Joi.object({
-  name: Joi.string().min(2).max(50),
-  bio: Joi.string().max(500),
-  location: Joi.string().max(100),
-  interests: Joi.array().items(Joi.string()),
-  conservation_level: Joi.string().valid('Beginner', 'Intermediate', 'Advanced', 'Expert'),
-  favorite_animals: Joi.array().items(Joi.string())
-});
-
-// Helper functions
-const generateToken = (userId) => {
-  return jwt.sign(
-    { userId, type: 'access' },
-    process.env.JWT_SECRET || 'wildlife_guardians_secret_key_2025',
-    { expiresIn: '7d' }
-  );
-};
-
-const createUserSession = (userId, token, req) => {
-  // Session management can be implemented here if needed
-  return null;
-};
 
 // Controllers
 const register = async (req, res) => {
@@ -56,7 +30,12 @@ const register = async (req, res) => {
     const { name, email, password } = value;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const { data: existingUser, error: existingUserError } = await global.supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -64,38 +43,36 @@ const register = async (req, res) => {
       });
     }
 
-    // Create user document
-    const newUser = new User({
-      name,
-      email: email.toLowerCase(),
-      password
-    });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Save user to database (password will be hashed by pre-save hook)
-    await newUser.save();
+    // Insert new user
+    const { data: newUser, error: insertError } = await global.supabase
+      .from('users')
+      .insert({
+        name,
+        email: email.toLowerCase(),
+        password_hash: hashedPassword
+      })
+      .select()
+      .single();
 
-    // Generate JWT token
-    const token = generateToken(newUser._id);
-
-    // Create session if needed
-    createUserSession(newUser._id, token, req);
+    if (insertError) {
+      console.error('Error inserting user:', insertError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create user'
+      });
+    }
 
     // Return user data (without password)
-    const userWithoutPassword = {
-      id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
-      avatar_url: newUser.avatar_url,
-      created_at: newUser.created_at,
-      updated_at: newUser.updated_at
-    };
+    const { password_hash, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        user: userWithoutPassword,
-        token
+        user: userWithoutPassword
       }
     });
 
@@ -122,17 +99,22 @@ const login = async (req, res) => {
 
     const { email, password } = value;
 
-    // Find user by email and select password field
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-    if (!user) {
+    // Fetch user by email
+    const { data: user, error: fetchError } = await global.supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (fetchError || !user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
 
-    // Verify password using model method
-    const isPasswordValid = await user.matchPassword(password);
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -140,28 +122,14 @@ const login = async (req, res) => {
       });
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Create session if needed
-    createUserSession(user._id, token, req);
-
     // Return user data (without password)
-    const userWithoutPassword = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      avatar_url: user.avatar_url,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    };
+    const { password_hash, ...userWithoutPassword } = user;
 
     res.json({
       success: true,
       message: 'Login successful',
       data: {
-        user: userWithoutPassword,
-        token
+        user: userWithoutPassword
       }
     });
 
@@ -172,6 +140,11 @@ const login = async (req, res) => {
       message: 'Internal server error during login'
     });
   }
+};
+
+module.exports = {
+  register,
+  login
 };
 
 const logout = async (req, res) => {
@@ -431,6 +404,19 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+const findUserById = async (userId) => {
+  const { data, error } = await global.supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    return null;
+  }
+  return data;
+};
+
 // Export all functions
 module.exports = {
   register,
@@ -440,6 +426,5 @@ module.exports = {
   updateProfile,
   changePassword,
   deleteAccount,
-  generateToken,
   findUserById
 };

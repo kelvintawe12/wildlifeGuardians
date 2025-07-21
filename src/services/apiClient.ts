@@ -272,10 +272,9 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
-    const data = response.data as { data: { token: string; user: any } };
-    const { token, user } = data.data;
-    localStorage.setItem('authToken', token);
-    return { user, token };
+    const data = response.data as { data: { user: any } };
+    const { user } = data.data;
+    return { user };
   } catch (error) {
     console.error('Login failed:', error);
     throw error;
@@ -289,10 +288,9 @@ export const register = async (name: string, email: string, password: string) =>
       email, 
       password
     });
-    const data = response.data as { data: { token: string; user: any } };
-    const { token, user } = data.data;
-    localStorage.setItem('authToken', token);
-    return { user, token };
+    const data = response.data as { data: { user: any } };
+    const { user } = data.data;
+    return { user };
   } catch (error: any) {
     // Check for duplicate email error (400)
     if (error.response && error.response.status === 400) {

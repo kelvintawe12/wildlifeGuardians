@@ -119,8 +119,7 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setLoading(true);
     clearError();
     try {
-      const { user: newUser, token } = await apiRegister(name, email, password);
-      setStoredToken(token);
+      const { user: newUser } = await apiRegister(name, email, password);
       setStoredUser(newUser);
       setUser(newUser);
       setProfile(null);
@@ -136,14 +135,9 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setLoading(true);
     clearError();
     try {
-      const { user: loggedInUser, token } = await apiLogin(email, password);
-      setStoredToken(token);
+      const { user: loggedInUser } = await apiLogin(email, password);
       setStoredUser(loggedInUser);
       setUser(loggedInUser);
-      // Set axios default Authorization header immediately
-      import('../services/apiClient').then(({ default: api }) => {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      });
       try {
         const userProfile = await getUserProfile();
         setStoredProfile(userProfile);
