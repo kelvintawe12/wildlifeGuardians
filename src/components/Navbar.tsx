@@ -57,11 +57,7 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navLinks = [
-    { path: '/', label: 'Dashboard', icon: HomeIcon },
-    { path: '/badges', label: 'Badges', icon: AwardIcon },
-    { path: '/learn', label: 'Learn', icon: BookOpenIcon },
-  ];
+  // navLinks moved to Sidebar
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -71,10 +67,10 @@ const Navbar: React.FC = () => {
     }`}>
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
+          {/* Logo - shifted right for sidebar toggle */}
           <Link 
             to="/" 
-            className="flex items-center space-x-3 group transition-transform duration-200 hover:scale-105"
+            className="flex items-center space-x-3 group transition-transform duration-200 hover:scale-105 ml-14 md:ml-16 lg:ml-20 xl:ml-24"
             aria-label="Home"
           >
             <div className="relative">
@@ -103,28 +99,8 @@ const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map(({ path, label, icon: Icon }) => (
-              <Link
-                key={path}
-                to={path}
-                className={`relative flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                  isActive(path)
-                    ? isScrolled
-                      ? 'bg-emerald-100 text-emerald-700 shadow-md'
-                      : 'bg-white/20 text-white shadow-md'
-                    : isScrolled
-                      ? 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
-                aria-current={isActive(path) ? 'page' : undefined}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="font-medium">{label}</span>
-              </Link>
-            ))}
-
+          {/* Profile/Notifications only */}
+          <div className="flex items-center space-x-6">
             {/* Notifications */}
             <div className="relative" ref={notificationsRef}>
               <button 
@@ -139,7 +115,6 @@ const Navbar: React.FC = () => {
               >
                 <BellIcon className="h-6 w-6" />
               </button>
-              
               {isNotificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -207,7 +182,6 @@ const Navbar: React.FC = () => {
                 </span>
                 <ChevronDownIcon className="h-4 w-4 ml-1" />
               </button>
-              
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
                   <Link 
@@ -229,68 +203,7 @@ const Navbar: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`md:hidden p-2 rounded-lg transition-colors duration-200 ${
-              isScrolled
-                ? 'bg-gray-100 hover:bg-gray-200'
-                : 'bg-white/10 hover:bg-white/20'
-            }`}
-            aria-label="Menu"
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? (
-              <XIcon className={`h-6 w-6 ${isScrolled ? 'text-gray-700' : 'text-white'}`} />
-            ) : (
-              <MenuIcon className={`h-6 w-6 ${isScrolled ? 'text-gray-700' : 'text-white'}`} />
-            )}
-          </button>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4">
-            <div className="space-y-2">
-              {navLinks.map(({ path, label, icon: Icon }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive(path)
-                      ? 'bg-white/20 text-white'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  }`}
-                  aria-current={isActive(path) ? 'page' : undefined}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{label}</span>
-                </Link>
-              ))}
-
-              <div className="border-t border-white/20 pt-2 mt-2">
-                <Link
-                  to="/settings"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-white/90 hover:text-white hover:bg-white/10"
-                >
-                  <SettingsIcon className="h-5 w-5" />
-                  <span className="font-medium">Settings</span>
-                </Link>
-
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-900/20"
-                >
-                  <LogOutIcon className="h-5 w-5" />
-                  <span className="font-medium">Sign out</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
