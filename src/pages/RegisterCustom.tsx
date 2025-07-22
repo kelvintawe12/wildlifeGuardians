@@ -113,7 +113,12 @@ const Register: React.FC = () => {
     }
 
     try {
-      await signUp(formData);
+      await signUp(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.confirmPassword
+      );
       toast.success('Account created successfully! Welcome to Wildlife Guardians!');
       navigate('/');
     } catch (error: any) {

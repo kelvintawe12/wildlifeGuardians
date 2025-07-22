@@ -71,7 +71,7 @@ app.use('/api', indexRoutes);
 app.use('/api/test', testRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: 'Route not found'

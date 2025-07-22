@@ -31,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string, confirmPassword?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithTestCredentials: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -115,11 +115,11 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initializeAuth();
   }, []);
 
-  const signUp = async (name: string, email: string, password: string): Promise<void> => {
+  const signUp = async (name: string, email: string, password: string, confirmPassword?: string): Promise<void> => {
     setLoading(true);
     clearError();
     try {
-      const { user: newUser } = await apiRegister(name, email, password);
+      const { user: newUser } = await apiRegister(name, email, password, confirmPassword);
       setStoredUser(newUser);
       setUser(newUser);
       setProfile(null);

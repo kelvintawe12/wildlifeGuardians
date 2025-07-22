@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useCustomAuth } from '../contexts/CustomAuthContext';
+import { useCustomAuth } from '././../src/contexts/CustomAuthContext';
 import { 
   MenuIcon, 
   XIcon, 
