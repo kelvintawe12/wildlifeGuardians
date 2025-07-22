@@ -20,45 +20,42 @@ import ProtectedRouteCustom from './components/ProtectedRouteCustom';
 import Layout from './components/Layout';
 import OfflineIndicator from './components/OfflineIndicatorEnhanced';
 import { PWAInstall } from './components/PWAInstall';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import ChatBot from './components/ChatBot';
 export function App() {
   return (
-    <CustomAuthProvider>
-      <Router>
-        <Toaster position="top-right" />
-        <OfflineIndicator />
-        <PWAInstall />
-        <Routes>
-          <Route path="/login" element={<LoginCustom />} />
-          <Route path="/register" element={<RegisterCustom />} />
-          
-          {/* Public pages */}
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/help" element={<Help />} />
-          
-          <Route element={<Layout />}>
-            <Route path="/" element={<ProtectedRouteCustom>
-                  <Dashboard />
-                </ProtectedRouteCustom>} />
-            <Route path="/quiz/:id" element={<ProtectedRouteCustom>
-                  <QuizPage />
-                </ProtectedRouteCustom>} />
-            <Route path="/animal/:id" element={<ProtectedRouteCustom>
-                  <AnimalInfo />
-                </ProtectedRouteCustom>} />
-            <Route path="/badges" element={<ProtectedRouteCustom>
-                  <Badges />
-                </ProtectedRouteCustom>} />
-            <Route path="/settings" element={<ProtectedRouteCustom>
-                  <Settings />
-                </ProtectedRouteCustom>} />
-          </Route>
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </Router>
-    </CustomAuthProvider>
+    <ErrorBoundary>
+      <CustomAuthProvider>
+        <Router>
+          <Toaster position="top-right" />
+          <OfflineIndicator />
+          <PWAInstall />
+          <Routes>
+            <Route path="/login" element={<LoginCustom />} />
+            <Route path="/register" element={<RegisterCustom />} />
+            <Route element={
+              <>
+                <Layout />
+                <ChatBot />
+              </>
+            }>
+              {/* Public pages in layout */}
+              <Route path="/" element={<ProtectedRouteCustom><Dashboard /></ProtectedRouteCustom>} />
+              <Route path="/quiz/:id" element={<ProtectedRouteCustom><QuizPage /></ProtectedRouteCustom>} />
+              <Route path="/animal/:id" element={<ProtectedRouteCustom><AnimalInfo /></ProtectedRouteCustom>} />
+              <Route path="/badges" element={<ProtectedRouteCustom><Badges /></ProtectedRouteCustom>} />
+              <Route path="/settings" element={<ProtectedRouteCustom><Settings /></ProtectedRouteCustom>} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/help" element={<Help />} />
+            </Route>
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </Router>
+      </CustomAuthProvider>
+    </ErrorBoundary>
   );
 }

@@ -10,6 +10,13 @@ interface User {
   created_at: string;
   email_verified: boolean;
   last_login?: string;
+  notifications?: {
+    id: string;
+    title: string;
+    message: string;
+    createdAt: string;
+  }[];
+  notificationsError?: string;
 }
 
 interface UserProfile {
