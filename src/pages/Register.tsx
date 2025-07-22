@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
 import { BookOpenIcon, MailIcon, LockIcon, UserIcon, AlertCircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 const Register: React.FC = () => {
@@ -12,7 +12,7 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const {
     signUp
-  } = useAuth();
+  } = useCustomAuth();
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,16 +25,9 @@ const Register: React.FC = () => {
       return;
     }
     try {
-      const {
-        error
-      } = await signUp(email, password, name);
-      if (error) {
-        setError(error.message);
-        toast.error('Registration failed. Please try again.');
-      } else {
-        toast.success('Registration successful! Please log in.');
-        navigate('/login');
-      }
+      await signUp(name, email, password, confirmPassword);
+      toast.success('Registration successful! Please log in.');
+      navigate('/login');
     } catch (err: any) {
       setError(err.message);
       toast.error('An unexpected error occurred.');

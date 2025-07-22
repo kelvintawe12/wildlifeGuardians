@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
 import { getQuizById, saveQuizResult, awardBadge } from '../services/supabaseClient';
 import { CheckIcon, XIcon, ArrowRightIcon, AwardIcon, HomeIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ const QuizPage: React.FC = () => {
   }>();
   const {
     user
-  } = useAuth();
+  } = useCustomAuth();
   const navigate = useNavigate();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
