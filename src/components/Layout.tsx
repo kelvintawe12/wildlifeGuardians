@@ -6,26 +6,34 @@ import Sidebar from './Sidebar';
 
 const Layout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Navbar - completely flush */}
-      <header className="w-full sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Navbar - fixed at top */}
+      <header className="sticky top-0 z-50 w-full">
         <Navbar />
       </header>
 
-      {/* Main content with sidebar and scrollable frame */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main content area with sidebar */}
+      <div className="flex flex-1">
+        {/* Sidebar - now properly integrated with the layout */}
         <Sidebar />
-        <div className="flex-1 flex flex-col min-h-0">
-          <main className="flex-1 overflow-y-auto focus:outline-none mx-auto w-full max-w-[100vw] p-4 md:p-6">
-            <Outlet />
+        
+        {/* Content area */}
+        <div className="flex-1 flex flex-col min-h-[calc(100vh-64px)] lg:min-h-[calc(100vh-72px)]">
+          {/* Main content with proper spacing */}
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 w-full">
+            <div className="max-w-7xl mx-auto w-full">
+              <Outlet />
+            </div>
           </main>
+          
+          {/* Footer - now properly positioned */}
+          <footer className="w-full bg-white border-t border-gray-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Footer />
+            </div>
+          </footer>
         </div>
       </div>
-
-      {/* Footer - fixed to bottom */}
-      <footer className="w-full fixed bottom-0 left-0 z-40">
-        <Footer />
-      </footer>
     </div>
   );
 };

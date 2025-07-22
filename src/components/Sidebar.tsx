@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HomeIcon, AwardIcon, BookOpenIcon, HelpCircleIcon, InfoIcon, SettingsIcon } from 'lucide-react';
-
 import { ShieldIcon, FileTextIcon, PhoneIcon } from 'lucide-react';
 
 const navLinks = [
@@ -20,12 +19,11 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
-  // Sidebar is always open on md+ screens, collapsible on mobile
   return (
     <>
-      {/* Mobile toggle button */}
+      {/* Mobile toggle button - only shows on mobile */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-emerald-600 text-white p-2 rounded-lg shadow-lg focus:outline-none"
+        className="lg:hidden fixed top-4 left-4 z-50 bg-emerald-600 text-white p-2 rounded-lg shadow-lg focus:outline-none"
         onClick={() => setOpen(!open)}
         aria-label="Open sidebar"
       >
@@ -33,19 +31,20 @@ const Sidebar: React.FC = () => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
+      
       {/* Overlay for mobile */}
       {open && (
-        <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={() => setOpen(false)} />
+        <div className="lg:hidden fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />
       )}
-      {/* Sidebar */}
+      
+      {/* Sidebar - fixed on desktop but behaves differently on mobile */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 shadow-lg z-50 transform transition-transform duration-300
+        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 shadow-lg z-40 transform transition-transform duration-300
           ${open ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0 md:block md:w-56`}
-        style={{ minHeight: '100vh' }}
+          lg:translate-x-0 lg:w-56`}
       >
         <div className="flex flex-col h-full py-8 px-4 space-y-2">
-          <div className="mb-8 flex items-center space-x-3">
+          <div className="mb-8 flex items-center space-x-3 px-3">
             <img src="/wildlife-guardians-compact.svg" alt="Logo" className="w-10 h-10" />
             <span className="text-lg font-bold text-emerald-700">Wildlife Guardians</span>
           </div>
