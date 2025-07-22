@@ -124,7 +124,6 @@ const login = async (req, res) => {
 
     // Return user data (without password)
     const { password_hash, ...userWithoutPassword } = user;
-
     res.json({
       success: true,
       message: 'Login successful',

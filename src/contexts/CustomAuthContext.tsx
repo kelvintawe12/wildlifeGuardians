@@ -39,20 +39,10 @@ interface AuthContextType {
   clearError: () => void;
 }
 
-const TOKEN_KEY = 'wildlife_guardians_token';
 const USER_KEY = 'wildlife_guardians_user';
 const PROFILE_KEY = 'wildlife_guardians_profile';
 
-const getStoredToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-const setStoredToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-};
-
-const removeStoredToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
+const removeStoredUserAndProfile = (): void => {
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(PROFILE_KEY);
 };
@@ -97,15 +87,16 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const initializeAuth = async () => {
       setLoading(true);
       try {
-        const token = getStoredToken();
-        if (token) {
-          // Verify token by fetching user profile
+        // Set user from localStorage
+        const storedUser = getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+          // Fetch profile from API
           const userProfile = await getUserProfile();
-          setUser(userProfile);
           setProfile(userProfile);
         }
       } catch (error) {
-        removeStoredToken();
+        removeStoredUserAndProfile();
         setUser(null);
         setProfile(null);
       } finally {
@@ -162,8 +153,7 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     clearError();
     try {
       const response = await api.post('/auth/test-login');
-      const { user: loggedInUser, token } = (response.data as { data: { user: User; token: string } }).data;
-      setStoredToken(token);
+      const { user: loggedInUser } = (response.data as { data: { user: User } }).data;
       setStoredUser(loggedInUser);
       setUser(loggedInUser);
       const userProfile = await getUserProfile();
@@ -185,7 +175,7 @@ export const CustomAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err) {
       // Ignore logout errors
     } finally {
-      removeStoredToken();
+      removeStoredUserAndProfile();
       setUser(null);
       setProfile(null);
       setLoading(false);

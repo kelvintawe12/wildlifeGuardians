@@ -22,29 +22,9 @@ const api = axios.create({
   withCredentials: true
 });
 
-// Add auth token to requests if available
-api.interceptors.request.use((config: any) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// No auth token logic needed
 
-// Handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      // Prevent infinite redirect loop
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// No auth error handling needed for token
 
 // Types
 export interface Quiz {
@@ -272,10 +252,9 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
-    const data = response.data as { data: { token: string; user: any } };
-    const { token, user } = data.data;
-    localStorage.setItem('authToken', token);
-    return { user, token };
+    const data = response.data as { data: { user: any } };
+    const { user } = data.data;
+    return { user };
   } catch (error) {
     console.error('Login failed:', error);
     throw error;
@@ -290,10 +269,9 @@ export const register = async (name: string, email: string, password: string, co
       password,
       confirmPassword: password
     });
-    const data = response.data as { data: { token: string; user: any } };
-    const { token, user } = data.data;
-    localStorage.setItem('authToken', token);
-    return { user, token };
+    const data = response.data as { data: { user: any } };
+    const { user } = data.data;
+    return { user };
   } catch (error: any) {
     // Check for duplicate email error (400)
     if (error.response && error.response.status === 400) {
@@ -317,10 +295,8 @@ export const register = async (name: string, email: string, password: string, co
 export const logout = async () => {
   try {
     await api.post('/auth/logout');
-    localStorage.removeItem('authToken');
   } catch (error) {
     console.error('Logout failed:', error);
-    localStorage.removeItem('authToken'); // Clear token anyway
   }
 };
 
