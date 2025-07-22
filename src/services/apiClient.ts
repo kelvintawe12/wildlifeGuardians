@@ -178,9 +178,21 @@ export const getUserBadges = async (): Promise<Badge[]> => {
 };
 
 // User endpoints
-export const getUserProfile = async () => {
+export const getUserProfile = async (email?: string) => {
   try {
-    const response = await api.get('/auth/me');
+    let userEmail = email;
+    if (!userEmail) {
+      // Try to get from localStorage
+      const userData = localStorage.getItem('wildlife_guardians_user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        userEmail = user.email;
+      }
+    }
+    if (!userEmail) {
+      throw new Error('No email provided for user profile fetch');
+    }
+    const response = await api.get(`/auth/me?email=${encodeURIComponent(userEmail)}`);
     const data = response.data as { data: { user: any } };
     return data.data.user;
   } catch (error: any) {

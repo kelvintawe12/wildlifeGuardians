@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
 import { getUserBadges } from '../services/apiClient';
 import { AwardIcon, TrophyIcon, UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +19,7 @@ interface LeaderboardUser {
 const Badges: React.FC = () => {
   const {
     user
-  } = useAuth();
+  } = useCustomAuth();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
