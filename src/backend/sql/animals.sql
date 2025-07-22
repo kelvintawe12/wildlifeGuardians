@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS animals (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   image_url TEXT,
+  threats TEXT[],
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

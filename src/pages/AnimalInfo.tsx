@@ -10,9 +10,10 @@ interface Animal {
   conservation_status: string;
   habitat: string;
   description: string;
-  facts: string[];
-  threats: string[];
-  conservation_efforts: string[];
+  facts?: string[];
+  fun_facts?: string[];
+  threats?: string[];
+  conservation_efforts?: string[];
   image_url: string;
   location_map?: string;
 }
@@ -140,7 +141,7 @@ const AnimalInfo: React.FC = () => {
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-3">Interesting Facts</h2>
             <ul className="space-y-2">
-              {animal.facts.map((fact, index) => <li key={index} className="flex items-start">
+              {(animal.facts || animal.fun_facts || []).map((fact, index) => <li key={index} className="flex items-start">
                   <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-600 text-xs mr-2 mt-0.5 flex-shrink-0">
                     {index + 1}
                   </span>
@@ -154,7 +155,7 @@ const AnimalInfo: React.FC = () => {
               Threats
             </h2>
             <ul className="space-y-2">
-              {animal.threats.map((threat, index) => <li key={index} className="flex items-start">
+              {(animal.threats || []).map((threat, index) => <li key={index} className="flex items-start">
                   <span className="text-red-500 mr-2">•</span>
                   <span className="text-gray-700">{threat}</span>
                 </li>)}
@@ -166,7 +167,7 @@ const AnimalInfo: React.FC = () => {
               Conservation Efforts
             </h2>
             <ul className="space-y-2">
-              {animal.conservation_efforts.map((effort, index) => <li key={index} className="flex items-start">
+              {(animal.conservation_efforts || []).map((effort, index) => <li key={index} className="flex items-start">
                   <span className="text-green-500 mr-2">•</span>
                   <span className="text-gray-700">{effort}</span>
                 </li>)}
