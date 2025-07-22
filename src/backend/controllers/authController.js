@@ -21,108 +21,45 @@ const generateToken = (userId) => {
   });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
+// @desc    Get current user (stateless)
+// @route   GET /api/auth/me
 // @access  Public
-const register = async (req, res) => {
+const getMe = async (req, res) => {
   try {
-    // Validate request body
-    const { error, value } = registerSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      });
+    // For stateless demo: get user by email from query string
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
     }
-
-    const { email, password, name } = value;
-
-    // Check if user already exists in Supabase Auth
-    const { data: existingUser, error: checkError } = await global.supabase.auth.admin
-      .listUsers();
-
-    if (checkError) {
-      console.error('Error checking existing users:', checkError);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to check user existence'
-      });
-    }
-
-    const userExists = existingUser.users.find(user => user.email === email);
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        error: 'User already exists with this email'
-      });
-    }
-
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await global.supabase.auth.admin
-      .createUser({
-        email,
-        password,
-        email_confirm: true
-      });
-
-    if (authError) {
-      console.error('Supabase auth error:', authError);
-      return res.status(400).json({
-        success: false,
-        error: authError.message
-      });
-    }
-
-    // Create user profile
-    const { data: profile, error: profileError } = await global.supabase
+    const { data: user, error } = await global.supabase
       .from('profiles')
-      .insert([
-        {
-          id: authData.user.id,
-          name,
-          email,
-          avatar_url: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select()
+      .select('*')
+      .eq('email', email)
       .single();
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      // Try to clean up auth user if profile creation fails
-      await global.supabase.auth.admin.deleteUser(authData.user.id);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to create user profile'
-      });
+    if (error || !user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
-
-    // Generate JWT token
-    const token = generateToken(authData.user.id);
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: 'User registered successfully',
       data: {
         user: {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          avatar_url: profile.avatar_url
-        },
-        token
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          created_at: user.created_at
+        }
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Get me error:', error);
     res.status(500).json({
       success: false,
-      error: 'Internal server error during registration'
+      error: 'Failed to fetch user profile'
     });
   }
 };
+// ...existing code...
 
 // @desc    Login user
 // @route   POST /api/auth/login
@@ -195,33 +132,7 @@ const login = async (req, res) => {
   }
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
-const getMe = async (req, res) => {
-  try {
-    const user = req.user;
-    
-    res.status(200).json({
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          avatar_url: user.avatar_url,
-          created_at: user.created_at
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get me error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch user information'
-    });
-  }
-};
+// ...existing code...
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
@@ -290,7 +201,6 @@ const logout = async (req, res) => {
 };
 
 module.exports = {
-  register,
   login,
   getMe,
   updateProfile,

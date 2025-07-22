@@ -1,6 +1,5 @@
 const express = require('express');
 const {
-  register,
   login,
   getMe,
   updateProfile,
@@ -13,11 +12,10 @@ const {
 const router = express.Router();
 
 // Public routes
-router.post('/register', register);
 router.post('/login', login);
 
 // Protected routes
-router.get('/me', authenticateSupabase, getMe);
+router.get('/me', getMe);
 router.put('/profile', authenticateSupabase, updateProfile);
 router.post('/logout', authenticateSupabase, logout);
 
