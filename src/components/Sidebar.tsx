@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HomeIcon, AwardIcon, BookOpenIcon, HelpCircleIcon, InfoIcon, SettingsIcon } from 'lucide-react';
 
+import { ShieldIcon, FileTextIcon, PhoneIcon } from 'lucide-react';
+
 const navLinks = [
   { path: '/', label: 'Dashboard', icon: HomeIcon },
   { path: '/badges', label: 'Badges', icon: AwardIcon },
   { path: '/learn', label: 'Learn', icon: BookOpenIcon },
   { path: '/help', label: 'Help Center', icon: HelpCircleIcon },
   { path: '/about', label: 'About', icon: InfoIcon },
+  { path: '/contact', label: 'Contact', icon: PhoneIcon },
+  { path: '/privacy', label: 'Privacy Policy', icon: ShieldIcon },
+  { path: '/terms', label: 'Terms of Service', icon: FileTextIcon },
   { path: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
