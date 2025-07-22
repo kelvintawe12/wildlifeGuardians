@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomAuth } from '../contexts/CustomAuthContext';
 import { 
   getQuizzes, 
   getAnimals, 
@@ -53,7 +53,7 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useCustomAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -248,7 +248,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold font-['Playfair_Display'] mb-2">
-                    Welcome back, {user?.user_metadata?.name || 'Guardian'}!
+                    Welcome back, {user?.name || 'Guardian'}!
                   </h1>
                   <p className="text-white/90 text-lg mb-2">
                     Ready to continue your wildlife conservation journey?
