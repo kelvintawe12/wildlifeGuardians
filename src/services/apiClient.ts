@@ -166,9 +166,21 @@ export const getBadgeTypes = async () => {
   }
 };
 
-export const getUserBadges = async (): Promise<Badge[]> => {
+export const getUserBadges = async (email?: string): Promise<Badge[]> => {
   try {
-    const response = await api.get('/badges/user');
+    let userEmail = email;
+    if (!userEmail) {
+      // Try to get from localStorage
+      const userData = localStorage.getItem('wildlife_guardians_user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        userEmail = user.email;
+      }
+    }
+    if (!userEmail) {
+      throw new Error('No email provided for user badges fetch');
+    }
+    const response = await api.get(`/badges/user?email=${encodeURIComponent(userEmail)}`);
     const data = response.data as { data: { badges: Badge[] } };
     return data.data.badges || [];
   } catch (error) {
@@ -192,7 +204,8 @@ export const getUserProfile = async (email?: string) => {
     if (!userEmail) {
       throw new Error('No email provided for user profile fetch');
     }
-    const response = await api.get(`/auth/me?email=${encodeURIComponent(userEmail)}`);
+    // Try /users/profile first
+    const response = await api.get(`/users/profile?email=${encodeURIComponent(userEmail)}`);
     const data = response.data as { data: { user: any } };
     return data.data.user;
   } catch (error: any) {
@@ -212,16 +225,24 @@ export const getUserProfile = async (email?: string) => {
   }
 };
 
-export const updateUserProfile = async (profileData: { name?: string; avatar_url?: string }) => {
-  try {
-    const response = await api.put('/auth/profile', profileData);
-    const data = response.data as { data: { user: any } };
-    return data.data.user;
-  } catch (error) {
-    console.error('Failed to update user profile:', error);
-    throw error;
+export const updateUserProfile = async (profileData: any, email?: string) => {
+  let userEmail = email;
+  if (!userEmail) {
+    const userData = localStorage.getItem('wildlife_guardians_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      userEmail = user.email;
+    }
   }
+  if (!userEmail) {
+    throw new Error('No email provided for user profile update');
+  }
+  const response = await api.put(`/users/profile?email=${encodeURIComponent(userEmail)}`, profileData);
+  const data = response.data as { data: { user: any } };
+  return data.data.user;
 };
+
+// ...existing code...
 
 // Dashboard stats (derived from multiple endpoints)
 export const getDashboardStats = async (): Promise<DashboardStats> => {

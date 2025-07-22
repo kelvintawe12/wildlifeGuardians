@@ -11,22 +11,23 @@ const updateProfileSchema = Joi.object({
 // @access  Private
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-
+    // For stateless demo: get user by email from query string
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
     // Get user profile
     const { data: user, error: userError } = await global.supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('email', email)
       .single();
-
     if (userError || !user) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
       });
     }
-
     res.status(200).json({
       success: true,
       data: {
@@ -54,8 +55,11 @@ const getProfile = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-
+    // For stateless demo: get user by email from query string
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
     // Validate request body
     const { error, value } = updateProfileSchema.validate(req.body);
     if (error) {
@@ -64,33 +68,38 @@ const updateProfile = async (req, res) => {
         error: error.details[0].message
       });
     }
-
+    // Get user id from profiles table
+    const { data: userProfile, error: userError } = await global.supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
+    if (userError || !userProfile) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    const userId = userProfile.id;
     const updateData = {
       ...value,
       updated_at: new Date().toISOString()
     };
-
     // Remove undefined values
     Object.keys(updateData).forEach(key => {
       if (updateData[key] === undefined) {
         delete updateData[key];
       }
     });
-
     if (Object.keys(updateData).length === 1) { // Only updated_at
       return res.status(400).json({
         success: false,
         error: 'No valid fields to update'
       });
     }
-
     const { data: user, error: updateError } = await global.supabase
       .from('profiles')
       .update(updateData)
       .eq('id', userId)
       .select()
       .single();
-
     if (updateError) {
       console.error('Update profile error:', updateError);
       return res.status(500).json({
@@ -98,12 +107,17 @@ const updateProfile = async (req, res) => {
         error: 'Failed to update profile'
       });
     }
-
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
       data: {
-        user
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        }
       }
     });
   } catch (error) {

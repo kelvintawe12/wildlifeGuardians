@@ -17,8 +17,8 @@ const router = express.Router();
 router.get('/types', getBadgeTypes);
 router.get('/leaderboard', getBadgeLeaderboard);
 
-// Protected routes
-router.get('/user', authenticateSupabase, getUserBadges);
+// Public stateless route for demo
+router.get('/user', getUserBadges);
 router.post('/', authenticateSupabase, awardBadge); // System or admin only
 router.post('/check-progress', authenticateSupabase, checkProgressBadges);
 

@@ -57,14 +57,26 @@ const BADGE_TYPES = {
 // @access  Private
 const getUserBadges = async (req, res) => {
   try {
-    const userId = req.user.id;
-
+    // For stateless demo: get user by email from query string
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+    // Get user id from profiles table
+    const { data: user, error: userError } = await global.supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
+    if (userError || !user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    const userId = user.id;
     const { data: badges, error } = await global.supabase
       .from('badges')
       .select('*')
       .eq('user_id', userId)
       .order('awarded_at', { ascending: false });
-
     if (error) {
       console.error('Get user badges error:', error);
       return res.status(500).json({
@@ -72,14 +84,12 @@ const getUserBadges = async (req, res) => {
         error: 'Failed to fetch user badges'
       });
     }
-
     // Enrich badges with additional information
     const enrichedBadges = badges.map(badge => ({
       ...badge,
       ...BADGE_TYPES[badge.type],
       awarded_date: new Date(badge.awarded_at).toLocaleDateString()
     }));
-
     // Get badge statistics
     const stats = {
       total_badges: badges.length,
@@ -89,7 +99,6 @@ const getUserBadges = async (req, res) => {
       epic: badges.filter(b => BADGE_TYPES[b.type]?.rarity === 'epic').length,
       legendary: badges.filter(b => BADGE_TYPES[b.type]?.rarity === 'legendary').length
     };
-
     res.status(200).json({
       success: true,
       data: {

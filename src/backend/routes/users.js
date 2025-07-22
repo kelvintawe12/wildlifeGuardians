@@ -9,8 +9,8 @@ const {
 
 const router = express.Router();
 
-// Protected routes
-router.get('/profile', authenticateSupabase, getProfile);
-router.put('/profile', authenticateSupabase, updateProfile);
+// Public stateless routes for demo
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
 
 module.exports = router;
