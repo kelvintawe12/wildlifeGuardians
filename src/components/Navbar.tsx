@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
           {/* Logo - shifted right for sidebar toggle */}
           <Link 
             to="/" 
-            className="flex items-center space-x-3 group transition-transform duration-200 hover:scale-105 ml-14 md:ml-16 lg:ml-20 xl:ml-24"
+            className="flex items-center space-x-3 group transition-transform duration-200 hover:scale-105 ml-14 md:ml-56"
             aria-label="Home"
           >
             <div className="relative">

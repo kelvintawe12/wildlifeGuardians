@@ -12,18 +12,18 @@ const Layout: React.FC = () => {
         <Navbar />
       </header>
 
-      {/* Main content with sidebar */}
+      {/* Main content with sidebar and scrollable frame */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <div className="flex-1 overflow-y-auto focus:outline-none">
-          <main className="mx-auto w-full max-w-[100vw] p-4 md:p-6">
+        <div className="flex-1 flex flex-col min-h-0">
+          <main className="flex-1 overflow-y-auto focus:outline-none mx-auto w-full max-w-[100vw] p-4 md:p-6">
             <Outlet />
           </main>
         </div>
       </div>
 
-      {/* Footer - completely flush */}
-      <footer className="w-full">
+      {/* Footer - fixed to bottom */}
+      <footer className="w-full fixed bottom-0 left-0 z-40">
         <Footer />
       </footer>
     </div>

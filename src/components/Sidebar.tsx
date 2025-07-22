@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 shadow-lg z-50 transform transition-transform duration-300
           ${open ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0 md:static md:block md:w-56 md:z-0`}
+          md:translate-x-0 md:block md:w-56`}
         style={{ minHeight: '100vh' }}
       >
         <div className="flex flex-col h-full py-8 px-4 space-y-2">

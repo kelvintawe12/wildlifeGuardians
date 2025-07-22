@@ -4,7 +4,7 @@ import { HeartIcon, ShieldIcon, FileTextIcon, InfoIcon, PhoneIcon, HelpCircleIco
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gradient-to-r from-emerald-800 to-emerald-900 text-white py-6">
+    <footer className="bg-gradient-to-r from-emerald-800 to-emerald-900 text-white py-0.5">
       <div className="container mx-auto px-4 flex flex-col items-center justify-center">
         <div className="flex items-center space-x-3 mb-2">
           <img 
