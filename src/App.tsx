@@ -3,6 +3,9 @@ import { CustomAuthProvider } from './contexts/CustomAuthContext';
 import { Toaster } from 'sonner';
 // Pages
 import LoginCustom from './pages/LoginCustom';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminSignup from './pages/admin/AdminSignup';
+import { AdminProvider } from './contexts/AdminContext';
 import RegisterCustom from './pages/RegisterCustom';
 import Dashboard from './pages/Dashboard';
 import QuizPage from './pages/QuizPage';
@@ -32,6 +35,16 @@ export function App() {
           <PWAInstall />
           <Routes>
             <Route path="/login" element={<LoginCustom />} />
+            <Route path="/admin/login" element={
+              <AdminProvider>
+                <AdminLogin />
+              </AdminProvider>
+            } />
+            <Route path="/admin/signup" element={
+              <AdminProvider>
+                <AdminSignup />
+              </AdminProvider>
+            } />
             <Route path="/register" element={<RegisterCustom />} />
             <Route element={
               <>

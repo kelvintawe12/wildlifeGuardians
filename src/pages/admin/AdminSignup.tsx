@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
 import { ShieldIcon } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAdminAuth } from '../../contexts/AdminContext';
+import adminAPI from '@services/adminAPI';
 
-const AdminLogin: React.FC = () => {
+const AdminSignup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { login } = useAdminAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const ok = await login(email, password);
-    setLoading(false);
-    if (ok) {
-      navigate('/admin/dashboard', { replace: true });
-    } else {
-      setError('Invalid credentials');
+    setSuccess('');
+    try {
+      await adminAPI.adminSignup({ email, password, name });
+      setSuccess('Admin account created! You can now log in.');
+      setTimeout(() => navigate('/admin/login'), 1500);
+    } catch (e: any) {
+      setError(e.message || 'Failed to sign up');
     }
+    setLoading(false);
   };
 
   return (
@@ -29,7 +32,18 @@ const AdminLogin: React.FC = () => {
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 w-full max-w-sm space-y-6">
         <div className="flex items-center gap-2 mb-2">
           <ShieldIcon className="h-7 w-7 text-emerald-700" />
-          <h2 className="text-xl font-bold text-gray-900">Admin Login</h2>
+          <h2 className="text-xl font-bold text-gray-900">Admin Signup</h2>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input
+            type="text"
+            className="w-full rounded-md border border-gray-200 px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            autoComplete="name"
+            required
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -49,24 +63,25 @@ const AdminLogin: React.FC = () => {
             className="w-full rounded-md border border-gray-200 px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete="new-password"
             required
           />
         </div>
         {error && <div className="text-red-600 text-sm">{error}</div>}
+        {success && <div className="text-green-600 text-sm">{success}</div>}
         <button
           type="submit"
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-md shadow-sm disabled:opacity-60"
           disabled={loading}
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Signing up...' : 'Sign Up'}
         </button>
         <div className="text-center text-sm mt-2">
-          Don&apos;t have an account? <Link to="/admin/signup" className="text-emerald-700 hover:underline">Sign up</Link>
+          Already have an account? <Link to="/admin/login" className="text-emerald-700 hover:underline">Login</Link>
         </div>
       </form>
     </div>
   );
 };
 
-export default AdminLogin;
+export default AdminSignup;
