@@ -3,12 +3,9 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { Link, useLocation } from 'react-router-dom';
 import { useCustomAuth } from '../contexts/CustomAuthContext';
 import {
-  MenuIcon,
-  XIcon,
   UserIcon,
   AwardIcon,
   BookOpenIcon,
-  HomeIcon,
   LogOutIcon,
   SettingsIcon,
   BellIcon,
@@ -18,7 +15,6 @@ import {
 const Navbar: React.FC = () => {
   const { user, signOut } = useCustomAuth();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

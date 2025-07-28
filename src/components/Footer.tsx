@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { HeartIcon, ShieldIcon, FileTextIcon, InfoIcon, PhoneIcon, HelpCircleIcon } from 'lucide-react';
+import { HeartIcon } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (

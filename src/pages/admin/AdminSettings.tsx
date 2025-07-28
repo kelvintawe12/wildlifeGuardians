@@ -6,7 +6,7 @@ import { useAdminAuth } from '../../contexts/AdminContext';
 
 
 const AdminSettings: React.FC = () => {
-  const { logout, admin } = useAdminAuth();
+  const { logout } = useAdminAuth();
   const [admins, setAdmins] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newAdmin, setNewAdmin] = useState({
