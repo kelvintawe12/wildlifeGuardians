@@ -24,6 +24,11 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  const fillDemoCredentials = () => {
+    setEmail('demo.admin@example.com');
+    setPassword('password123');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 w-full max-w-sm space-y-6">
@@ -60,6 +65,13 @@ const AdminLogin: React.FC = () => {
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Login'}
+        </button>
+        <button
+          type="button"
+          onClick={fillDemoCredentials}
+          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow-sm"
+        >
+          Fill Demo Admin Credentials
         </button>
         <div className="text-center text-sm mt-2">
           Don&apos;t have an account? <Link to="/admin/signup" className="text-emerald-700 hover:underline">Sign up</Link>

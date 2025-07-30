@@ -75,7 +75,8 @@ const AnimalInfo: React.FC = () => {
       </div>;
   }
   // Helper function to get conservation status color
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return 'bg-blue-500 text-white';
     switch (status.toLowerCase()) {
       case 'extinct':
         return 'bg-black text-white';

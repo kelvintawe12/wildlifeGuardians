@@ -39,7 +39,7 @@ export async function getBadges() {
 }
 
 export async function createBadge(badge: any) { return badge; }
-export async function updateBadge(id: number, badge: any) { return badge; }
+export async function updateBadge(_id: number, badge: any) { return badge; }
 export async function deleteBadge(id: number) { return true; }
 
 export async function getDatabaseTables() {
