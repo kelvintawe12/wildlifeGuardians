@@ -14,6 +14,7 @@ declare global {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
+// Create axios instance with default config
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -21,6 +22,19 @@ const api = axios.create({
   },
   withCredentials: true
 });
+
+// Store auth token in memory
+let authToken: string | null = null;
+
+// Function to set auth token globally for axios instance
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
 
 // No auth token logic needed
 
