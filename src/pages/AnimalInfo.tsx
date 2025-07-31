@@ -28,14 +28,11 @@ interface Animal {
   location_map?: string;
 }
 const AnimalInfo: React.FC = () => {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchAnimal = async () => {
       try {
@@ -46,52 +43,29 @@ const AnimalInfo: React.FC = () => {
       } catch (error) {
         console.error('Error fetching animal data:', error);
         toast.error('Failed to load animal information');
-        // For demo purposes, use sample data if API fails
-        setAnimal(sampleAnimal);
+        setAnimal(null); // No fallback to sampleAnimal
       } finally {
         setIsLoading(false);
       }
     };
     fetchAnimal();
   }, [id]);
-  // Sample animal data for demonstration
-  const sampleAnimal: Animal = {
-    id: "0a88b6f1-62b8-4ec4-8a25-c34945a03544",
-    name: "Aardvark",
-    scientific_name: "Orycteropus afer",
-    species: "Aardvark",
-    habitat: "Savannas, Grasslands",
-    conservation_status: "Least Concern",
-    description: "Nocturnal mammals with powerful claws for digging, feeding primarily on ants and termites.",
-    image_url: "https://images.unsplash.com/photo-1551969014-7d2c4cddf0b6?w=800",
-    weight_range: "40-65 kg",
-    height_range: "0.4-0.6 meters",
-    lifespan: "18-23 years",
-    diet: "Insectivore",
-    location: ["Sub-Saharan Africa"],
-    interesting_facts: [
-      "Can dig faster than humans with shovels",
-      "Excellent sense of smell",
-      "Solitary and nocturnal",
-      "Can close nostrils while digging"
-    ],
-    threats: ["Habitat conversion", "Hunting", "Agricultural expansion"]
-  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-      </div>;
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+    </div>;
   }
   if (!animal) {
     return <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-700">
-          Animal information not found
-        </h2>
-        <button onClick={() => navigate('/')} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
-          <ArrowLeftIcon className="h-4 w-4 mr-2" />
-          Back to Home
-        </button>
-      </div>;
+      <h2 className="text-xl font-semibold text-gray-700">
+        Animal information not found
+      </h2>
+      <button onClick={() => navigate('/')} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+        <ArrowLeftIcon className="h-4 w-4 mr-2" />
+        Back to Home
+      </button>
+    </div>;
   }
   // Helper function to get conservation status color
   const getStatusColor = (status: string | null | undefined) => {
@@ -204,7 +178,10 @@ const AnimalInfo: React.FC = () => {
           Learning is the first step. Share what you've learned with friends and
           family to raise awareness!
         </p>
-        <button onClick={() => navigate('/quiz/1')} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+        <button
+          onClick={() => navigate(`/quiz/${animal.id}`)}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+        >
           Take a Quiz About {animal.name}s
         </button>
       </div>

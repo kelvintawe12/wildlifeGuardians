@@ -472,7 +472,10 @@ const Dashboard: React.FC = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Link to="/quiz/1" className="card p-6 text-center group hover:shadow-lg transition-all duration-300">
+          <Link
+            to={quizzes.length > 0 ? `/quiz/${quizzes[0].id}` : "#"}
+            className="card p-6 text-center group hover:shadow-lg transition-all duration-300"
+          >
             <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
               <PlayIcon className="h-8 w-8 text-emerald-600" />
             </div>
