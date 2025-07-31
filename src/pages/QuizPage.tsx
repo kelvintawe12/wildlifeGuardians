@@ -93,10 +93,10 @@ const QuizPage: React.FC = () => {
     if (!quiz || !user) return;
     setQuizCompleted(true);
     try {
-      // Calculate percentage score
-      const percentage = score / quiz.questions.length * 100;
-      // Save quiz result
-      await saveQuizResult(user.id, quiz.id, percentage, quiz.questions.length);
+      // Calculate percentage score and round to integer
+      const percentage = Math.round((score / quiz.questions.length) * 100);
+      // Save quiz result with integer score
+      await saveQuizResult(user.id, quiz.id, percentage, quiz.questions.length, score);
       // Award badge if score is good enough
       if (percentage >= 80) {
         const badgeType = `${quiz.title} Expert`;

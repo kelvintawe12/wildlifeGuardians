@@ -312,7 +312,7 @@ export const register = async (name: string, email: string, password: string, co
       name, 
       email, 
       password,
-      confirmPassword: password
+      confirmPassword: confirmPassword
     });
     const data = response.data as { data: { user: any } };
     const { user } = data.data;

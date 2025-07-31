@@ -29,7 +29,13 @@ export const getQuizById = async (id: string) => {
   return data;
 };
 
-export async function saveQuizResult(userId: string, quizId: string, score: number, totalQuestions: number) {
+export async function saveQuizResult(
+  userId: string,
+  quizId: string,
+  score: number,
+  totalQuestions: number,
+  correctAnswers: number // <-- add this
+) {
   const {
     data,
     error
@@ -41,6 +47,7 @@ export async function saveQuizResult(userId: string, quizId: string, score: numb
         quiz_id: quizId,
         score,
         total_questions: totalQuestions,
+        correct_answers: correctAnswers, // <-- add this
       },
     ]);
   if (error) throw error;
