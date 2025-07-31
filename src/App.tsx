@@ -12,6 +12,8 @@ import QuizPage from './pages/QuizPage';
 import AnimalInfo from './pages/AnimalInfo';
 import Badges from './pages/Badges';
 import Settings from './pages/Settings';
+import QuizList from './pages/QuizList';
+import AnimalList from './pages/AnimalList';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -54,7 +56,9 @@ export function App() {
             }>
               {/* Public pages in layout */}
               <Route path="/" element={<ProtectedRouteCustom><Dashboard /></ProtectedRouteCustom>} />
+              <Route path="/quiz" element={<ProtectedRouteCustom><QuizList /></ProtectedRouteCustom>} />
               <Route path="/quiz/:id" element={<ProtectedRouteCustom><QuizPage /></ProtectedRouteCustom>} />
+              <Route path="/animals" element={<ProtectedRouteCustom><AnimalList /></ProtectedRouteCustom>} />
               <Route path="/animal/:id" element={<ProtectedRouteCustom><AnimalInfo /></ProtectedRouteCustom>} />
               <Route path="/badges" element={<ProtectedRouteCustom><Badges /></ProtectedRouteCustom>} />
               <Route path="/settings" element={<ProtectedRouteCustom><Settings /></ProtectedRouteCustom>} />
