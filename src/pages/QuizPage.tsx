@@ -5,16 +5,23 @@ import { getQuizById, saveQuizResult, awardBadge } from '../services/supabaseCli
 import { CheckIcon, XIcon, ArrowRightIcon, AwardIcon, HomeIcon } from 'lucide-react';
 import { toast } from 'sonner';
 interface Question {
-  id: string;
-  text: string;
+  id: number;
+  question: string;
   options: string[];
-  correctAnswer: number;
+  correct: number;
+  explanation: string;
 }
 interface Quiz {
   id: string;
   title: string;
   description: string;
+  category: string;
+  difficulty: string;
+  duration_minutes: number;
   image_url: string;
+  total_questions: number;
+  created_at: string;
+  updated_at: string;
   questions: Question[];
 }
 const QuizPage: React.FC = () => {
@@ -40,13 +47,12 @@ const QuizPage: React.FC = () => {
       try {
         setIsLoading(true);
         if (!id) return;
-        const quizData = await getQuizById(id);
+        const quizData = await getQuizById(id); // Should return the real quiz object with questions
         setQuiz(quizData);
       } catch (error) {
         console.error('Error fetching quiz:', error);
         toast.error('Failed to load quiz');
-        // For demo purposes, use sample quiz if API fails
-        setQuiz(sampleQuiz);
+        setQuiz(null); // No fallback to sampleQuiz
       } finally {
         setIsLoading(false);
       }
@@ -77,7 +83,7 @@ const QuizPage: React.FC = () => {
   const handleSubmitAnswer = () => {
     if (!quiz || selectedOption === null) return;
     const currentQuestion = quiz.questions[currentQuestionIndex];
-    const isCorrect = selectedOption === currentQuestion.correctAnswer;
+    const isCorrect = selectedOption === currentQuestion.correct;
     if (isCorrect) {
       setScore(score + 1);
     }
@@ -90,7 +96,7 @@ const QuizPage: React.FC = () => {
       // Calculate percentage score
       const percentage = score / quiz.questions.length * 100;
       // Save quiz result
-      await saveQuizResult(user.id, quiz.id, percentage);
+      await saveQuizResult(user.id, quiz.id, percentage, quiz.questions.length);
       // Award badge if score is good enough
       if (percentage >= 80) {
         const badgeType = `${quiz.title} Expert`;
@@ -102,39 +108,6 @@ const QuizPage: React.FC = () => {
       console.error('Error saving quiz result:', error);
       toast.error('Failed to save quiz results');
     }
-  };
-  // Sample quiz data for demonstration
-  const sampleQuiz: Quiz = {
-    id: '1',
-    title: 'Mountain Gorillas',
-    description: "Test your knowledge about Rwanda's endangered mountain gorillas",
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    questions: [{
-      id: '1',
-      text: 'What is the conservation status of mountain gorillas?',
-      options: ['Least Concern', 'Vulnerable', 'Endangered', 'Critically Endangered'],
-      correctAnswer: 2
-    }, {
-      id: '2',
-      text: 'Where are mountain gorillas found?',
-      options: ['Throughout Central Africa', 'Only in Rwanda', 'Rwanda, Uganda, and Democratic Republic of Congo', 'Kenya and Tanzania'],
-      correctAnswer: 2
-    }, {
-      id: '3',
-      text: 'What is the main threat to mountain gorillas?',
-      options: ['Climate change', 'Habitat loss', 'Disease', 'All of the above'],
-      correctAnswer: 3
-    }, {
-      id: '4',
-      text: 'How many mountain gorillas are estimated to remain in the wild?',
-      options: ['Less than 100', 'Around 500', 'About 1,000', 'Over 5,000'],
-      correctAnswer: 2
-    }, {
-      id: '5',
-      text: 'What conservation effort has been most successful for mountain gorillas?',
-      options: ['Captive breeding programs', 'Ecotourism', 'Relocation to safer areas', 'Building fences around habitats'],
-      correctAnswer: 1
-    }]
   };
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">
@@ -189,7 +162,7 @@ const QuizPage: React.FC = () => {
               <HomeIcon className="h-4 w-4 mr-2" />
               Back to Home
             </button>
-            <button onClick={() => navigate(`/animal/${id}`)} className="inline-flex items-center justify-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md shadow-sm text-green-600 bg-white hover:bg-green-50">
+            <button onClick={() => navigate(`/animal/${quiz.id}`)} className="inline-flex items-center justify-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md shadow-sm text-green-600 bg-white hover:bg-green-50">
               Learn More About {quiz.title}
             </button>
           </div>
@@ -217,23 +190,26 @@ const QuizPage: React.FC = () => {
       </div>
       {/* Question content */}
       <div className="p-6">
-        <h2 className="text-lg font-medium text-gray-800 mb-4">
-          {currentQuestion.text}
-        </h2>
-        <div className="space-y-3">
-          {currentQuestion.options.map((option, index) => <button key={index} onClick={() => handleOptionSelect(index)} className={`w-full text-left p-3 rounded-md border ${selectedOption === index ? isAnswerSubmitted ? index === currentQuestion.correctAnswer ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700' : 'bg-green-50 border-green-500 text-green-700' : 'border-gray-300 hover:bg-gray-50'} transition-colors duration-200`} disabled={isAnswerSubmitted}>
-              <div className="flex items-center justify-between">
-                <span>{option}</span>
-                {isAnswerSubmitted && selectedOption === index && (index === currentQuestion.correctAnswer ? <CheckIcon className="h-5 w-5 text-green-500" /> : <XIcon className="h-5 w-5 text-red-500" />)}
-                {isAnswerSubmitted && selectedOption !== index && index === currentQuestion.correctAnswer && <CheckIcon className="h-5 w-5 text-green-500" />}
-              </div>
-            </button>)}
-        </div>
-        {isAnswerSubmitted && <div className={`mt-4 p-3 rounded-md ${selectedOption === currentQuestion.correctAnswer ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
-            <p className="text-sm">
-              {selectedOption === currentQuestion.correctAnswer ? 'Correct! Well done.' : `Incorrect. The correct answer is: ${currentQuestion.options[currentQuestion.correctAnswer]}`}
-            </p>
-          </div>}
+            <h2 className="text-lg font-medium text-gray-800 mb-4">
+              {currentQuestion.question}
+            </h2>
+            <div className="space-y-3">
+              {currentQuestion.options.map((option, index) => <button key={index} onClick={() => handleOptionSelect(index)} className={`w-full text-left p-3 rounded-md border ${selectedOption === index ? isAnswerSubmitted ? index === currentQuestion.correct ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700' : 'bg-green-50 border-green-500 text-green-700' : 'border-gray-300 hover:bg-gray-50'} transition-colors duration-200`} disabled={isAnswerSubmitted}>
+                  <div className="flex items-center justify-between">
+                    <span>{option}</span>
+                    {isAnswerSubmitted && selectedOption === index && (index === currentQuestion.correct ? <CheckIcon className="h-5 w-5 text-green-500" /> : <XIcon className="h-5 w-5 text-red-500" />)}
+                    {isAnswerSubmitted && selectedOption !== index && index === currentQuestion.correct && <CheckIcon className="h-5 w-5 text-green-500" />}
+                  </div>
+                </button>)}
+            </div>
+            {isAnswerSubmitted && <div className={`mt-4 p-3 rounded-md ${selectedOption === currentQuestion.correct ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+                <p className="text-sm">
+                  {selectedOption === currentQuestion.correct ? 'Correct! Well done.' : `Incorrect. The correct answer is: ${currentQuestion.options[currentQuestion.correct]}`}
+                </p>
+                <p className="mt-2 text-sm text-gray-600">
+                  {currentQuestion.explanation}
+                </p>
+              </div>}
       </div>
       {/* Actions */}
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">

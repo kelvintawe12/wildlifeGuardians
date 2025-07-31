@@ -6,15 +6,25 @@ import { toast } from 'sonner';
 interface Animal {
   id: string;
   name: string;
-  scientific_name: string;
-  conservation_status: string;
-  habitat: string;
-  description: string;
+  scientific_name: string | null;
+  species: string | null;
+  habitat: string | null;
+  conservation_status: string | null;
+  description: string | null;
   facts?: string[];
   fun_facts?: string[];
   threats?: string[];
   conservation_efforts?: string[];
   image_url: string;
+  location: string[] | null;
+  weight_range: string | null;
+  height_range: string | null;
+  lifespan: string | null;
+  diet: string | null;
+  interesting_facts?: string[];
+  // Remove created_at and updated_at from interface as they are not used in component
+  // created_at?: string;
+  // updated_at?: string;
   location_map?: string;
 }
 const AnimalInfo: React.FC = () => {
@@ -46,17 +56,26 @@ const AnimalInfo: React.FC = () => {
   }, [id]);
   // Sample animal data for demonstration
   const sampleAnimal: Animal = {
-    id: '1',
-    name: 'Mountain Gorilla',
-    scientific_name: 'Gorilla beringei beringei',
-    conservation_status: 'Endangered',
-    habitat: 'Mountain forests of Rwanda, Uganda, and the Democratic Republic of Congo',
-    description: 'Mountain gorillas are one of the most endangered great apes. They live in the cloud forests of the Virunga Mountains at elevations of 8,000 to 13,000 feet. These gorillas have thicker fur compared to other great apes, allowing them to live in colder temperatures.',
-    facts: ['Mountain gorillas share 98% of their DNA with humans', 'They live in groups called troops, led by a dominant male silverback', 'A silverback can weigh up to 180 kg (400 lb) and stand 1.8 m (6 ft) tall', 'They are herbivores, mainly eating leaves, shoots, and stems', 'Females typically give birth to one baby every 4-6 years'],
-    threats: ['Habitat loss due to human encroachment', 'Poaching and hunting', 'Civil unrest in their native regions', 'Diseases transmitted by humans', 'Climate change affecting their mountain habitats'],
-    conservation_efforts: ['Protected national parks in Rwanda, Uganda, and DRC', 'Ecotourism programs that fund conservation', 'Anti-poaching patrols and monitoring', 'Community education and involvement', 'International cooperation and funding'],
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    location_map: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mountain_gorilla_distribution.svg/1200px-Mountain_gorilla_distribution.svg.png'
+    id: "0a88b6f1-62b8-4ec4-8a25-c34945a03544",
+    name: "Aardvark",
+    scientific_name: "Orycteropus afer",
+    species: "Aardvark",
+    habitat: "Savannas, Grasslands",
+    conservation_status: "Least Concern",
+    description: "Nocturnal mammals with powerful claws for digging, feeding primarily on ants and termites.",
+    image_url: "https://images.unsplash.com/photo-1551969014-7d2c4cddf0b6?w=800",
+    weight_range: "40-65 kg",
+    height_range: "0.4-0.6 meters",
+    lifespan: "18-23 years",
+    diet: "Insectivore",
+    location: ["Sub-Saharan Africa"],
+    interesting_facts: [
+      "Can dig faster than humans with shovels",
+      "Excellent sense of smell",
+      "Solitary and nocturnal",
+      "Can close nostrils while digging"
+    ],
+    threats: ["Habitat conversion", "Hunting", "Agricultural expansion"]
   };
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">

@@ -242,8 +242,6 @@ export const updateUserProfile = async (profileData: any, email?: string) => {
   return data.data.user;
 };
 
-// ...existing code...
-
 // Dashboard stats (derived from multiple endpoints)
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
@@ -331,6 +329,13 @@ export const logout = async () => {
   } catch (error) {
     console.error('Logout failed:', error);
   }
+};
+
+export const getUserQuizResults = async (): Promise<any[]> => {
+  const response = await api.get('/quizzes/results/user');
+  // Assuming response.data.data.results is the array of quiz results
+  const data = response.data as { data: { results: any[] } };
+  return data.data.results || [];
 };
 
 export default api;

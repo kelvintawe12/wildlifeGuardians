@@ -5,7 +5,8 @@ import {
   getQuizzes, 
   getAnimals, 
   getUserBadges, 
-  checkApiHealth
+  checkApiHealth,
+  getUserQuizResults
 } from '../services/apiClient';
 import { 
   BookOpenIcon, 
@@ -147,11 +148,29 @@ const Dashboard: React.FC = () => {
         const quizCount = quizzesData.status === 'fulfilled' ? quizzesData.value.length : 0;
         const badgeCount = badgesData.status === 'fulfilled' ? badgesData.value.length : 0;
         
+        let completedQuizzes = 0;
+        let averageScore = 0;
+
+        if (user) {
+          try {
+            const quizResults = await getUserQuizResults();
+            completedQuizzes = quizResults.length;
+            averageScore = completedQuizzes > 0
+              ? Math.round(
+                  quizResults.reduce((sum, r) => sum + ((r.score / r.total_questions) * 100), 0) / completedQuizzes
+                )
+              : 0;
+          } catch (error) {
+            console.error('Failed to load quiz results:', error);
+            toast.error('Failed to load quiz results');
+          }
+        }
+
         setStats({
           totalQuizzes: quizCount,
-          completedQuizzes: 0, // TODO: Get from quiz results API
+          completedQuizzes,
           totalBadges: badgeCount,
-          averageScore: 0 // TODO: Calculate from quiz results
+          averageScore
         });
         
       } catch (error) {

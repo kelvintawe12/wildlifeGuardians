@@ -29,17 +29,23 @@ export const getQuizById = async (id: string) => {
   return data;
 };
 
-export const saveQuizResult = async (userId: string, quizId: string, score: number) => {
+export async function saveQuizResult(userId: string, quizId: string, score: number, totalQuestions: number) {
   const {
+    data,
     error
-  } = await supabase.from('quiz_results').insert({
-    user_id: userId,
-    quiz_id: quizId,
-    score,
-    completed_at: new Date()
-  });
+  } = await supabase
+    .from('quiz_results')
+    .insert([
+      {
+        user_id: userId,
+        quiz_id: quizId,
+        score,
+        total_questions: totalQuestions,
+      },
+    ]);
   if (error) throw error;
-};
+  return data;
+}
 
 // Animal information functions
 export const getAnimals = async () => {
