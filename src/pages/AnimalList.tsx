@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAnimals } from '../services/apiClient';
-import { EyeIcon, ArrowRightIcon } from 'lucide-react';
+import { EyeIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Animal {
@@ -64,14 +64,14 @@ const AnimalList: React.FC = () => {
             <p className="text-gray-600">No animals available at the moment. Please check back later.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {animals.map((animal) => (
-              <div key={animal.id} className="card group cursor-pointer overflow-hidden">
+              <div key={animal.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer flex flex-col">
                 <div className="relative h-48 overflow-hidden">
                   <img
                     src={animal.image_url}
                     alt={animal.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800';
                     }}
@@ -81,16 +81,13 @@ const AnimalList: React.FC = () => {
                       {animal.conservation_status || 'Least Concern'}
                     </span>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-1">{animal.name}</h3>
-                  </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-gray-600 mb-4 line-clamp-2">{animal.description}</p>
+                <div className="p-6 flex flex-col flex-grow">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{animal.name}</h3>
+                  <p className="text-gray-600 mb-4 flex-grow line-clamp-3">{animal.description}</p>
                   <Link
                     to={`/animal/${animal.id}`}
-                    className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-auto"
                   >
                     <EyeIcon className="mr-2 h-4 w-4" />
                     Learn More

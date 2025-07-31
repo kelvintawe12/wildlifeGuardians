@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HomeIcon, AwardIcon, BookOpenIcon, HelpCircleIcon, InfoIcon, SettingsIcon } from 'lucide-react';
+import { HomeIcon, AwardIcon, BookOpenIcon, HelpCircleIcon, InfoIcon, SettingsIcon, EyeIcon } from 'lucide-react';
 import { ShieldIcon, FileTextIcon, PhoneIcon } from 'lucide-react';
 
 const navLinks = [
   { path: '/', label: 'Dashboard', icon: HomeIcon },
+  { path: '/quiz', label: 'Quizzes', icon: BookOpenIcon },
+  { path: '/animals', label: 'Animals', icon: EyeIcon },
   { path: '/badges', label: 'Badges', icon: AwardIcon },
-  { path: '/learn', label: 'Learn', icon: BookOpenIcon },
   { path: '/help', label: 'Help Center', icon: HelpCircleIcon },
   { path: '/about', label: 'About', icon: InfoIcon },
   { path: '/contact', label: 'Contact', icon: PhoneIcon },
@@ -49,21 +50,24 @@ const Sidebar: React.FC = () => {
             <span className="text-lg font-bold text-emerald-700">Wildlife Guardians</span>
           </div>
           <nav className="flex-1 space-y-1">
-            {navLinks.map(({ path, label, icon: Icon }) => (
-              <Link
-                key={path}
-                to={path}
-                className={`flex items-center px-3 py-2 rounded-lg transition-colors font-medium text-base space-x-3
-                  ${location.pathname === path
-                    ? 'bg-emerald-100 text-emerald-700 shadow'
-                    : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'}
-                `}
-                onClick={() => setOpen(false)}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{label}</span>
-              </Link>
-            ))}
+            {navLinks.map(({ path, label, icon: Icon }) => {
+              const isActive = location.pathname === path || location.pathname.startsWith(path + '/');
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`flex items-center px-3 py-2 rounded-lg transition-colors font-medium text-base space-x-3
+                    ${isActive
+                      ? 'bg-emerald-100 text-emerald-700 shadow'
+                      : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-700'}
+                  `}
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
           </nav>
           <div className="mt-auto text-xs text-gray-400 text-center">
             &copy; {new Date().getFullYear()} Wildlife Guardians

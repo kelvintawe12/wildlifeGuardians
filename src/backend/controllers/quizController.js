@@ -348,23 +348,25 @@ const submitQuiz = async (req, res) => {
 
 // @desc    Get user's quiz results
 // @route   GET /api/quizzes/results
-// @access  Private
+// @access  Public (modified to allow fetching without authentication)
 const getUserQuizResults = async (req, res) => {
   try {
-    const userId = req.user.id;
     const { page = 1, limit = 10 } = req.query;
 
     const offset = (page - 1) * limit;
 
-    const { data: results, error, count } = await global.supabase
+    let query = global.supabase
       .from('quiz_results')
-      .select(`
-        *,
-        quiz:quizzes(id, title, description, image_url, difficulty)
-      `, { count: 'exact' })
-      .eq('user_id', userId)
+      .select('*, quiz:quizzes(id, title, description, image_url, difficulty)', { count: 'exact' })
       .order('completed_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    // If user_id is provided as query param, filter by it
+    if (req.query.user_id) {
+      query = query.eq('user_id', req.query.user_id);
+    }
+
+    const { data: results, error, count } = await query;
 
     if (error) {
       console.error('Get user quiz results error:', error);

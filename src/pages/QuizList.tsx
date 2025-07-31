@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getQuizzes } from '../services/apiClient';
-import { PlayIcon, ArrowRightIcon } from 'lucide-react';
+import { PlayIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Quiz {
@@ -49,33 +49,30 @@ const QuizList: React.FC = () => {
             <p className="text-gray-600">No quizzes available at the moment. Please check back later.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {quizzes.map((quiz) => (
-              <div key={quiz.id} className="card group cursor-pointer overflow-hidden">
+              <div key={quiz.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer flex flex-col">
                 <div className="relative h-48 overflow-hidden">
                   <img
                     src={quiz.image_url}
                     alt={quiz.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800';
                     }}
                   />
                   <div className="absolute top-4 right-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800`}>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                       {quiz.difficulty || 'Medium'}
                     </span>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-1">{quiz.title}</h3>
-                  </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
+                <div className="p-6 flex flex-col flex-grow">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{quiz.title}</h3>
+                  <p className="text-gray-600 mb-4 flex-grow line-clamp-3">{quiz.description}</p>
                   <Link
                     to={`/quiz/${quiz.id}`}
-                    className="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                    className="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-auto"
                   >
                     <PlayIcon className="mr-2 h-4 w-4" />
                     Start Quiz
